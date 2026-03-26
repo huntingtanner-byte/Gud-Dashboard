@@ -108,6 +108,8 @@ tr.int-timaeus td{background:#e8eaf6;}tr.int-timaeus:hover td{background:#c5cae9
 .ibadge-kate{background:#fce4ec;color:#c2185b;}.ibadge-matt{background:#ffebee;color:#c62828;}
 .ibadge-mia{background:#e8f5e9;color:#2e7d32;}.ibadge-sam{background:#e3f2fd;color:#1565c0;}
 .ibadge-timaeus{background:#e8eaf6;color:#283593;}
+.intern-select{appearance:none;-webkit-appearance:none;}
+.intern-select:focus{outline:2px solid var(--primary);}
 .name-link{cursor:pointer;color:var(--text);}
 .name-link:hover{color:var(--primary-dark);text-decoration:underline;}
 .qp-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;justify-content:flex-end;}
@@ -204,11 +206,6 @@ tr.int-timaeus td{background:#e8eaf6;}tr.int-timaeus:hover td{background:#c5cae9
         </tr></thead>
         <tbody id="contacts-tbody"></tbody>
       </table></div>
-      <div class="pagination">
-        <span id="page-info"></span>
-        <button id="btn-prev" onclick="changePage(-1)">← Prev</button>
-        <button id="btn-next" onclick="changePage(1)">Next →</button>
-      </div>
     </div>
   </div>
 
@@ -435,24 +432,34 @@ function getFiltered() {
   return res;
 }
 
+function internSelectHTML(id, current) {
+  const opts = ['','Kate','Matt','Mia','Sam','Timaeus'];
+  return `<select class="intern-select ibadge ${current?'ibadge-'+current.toLowerCase():''}" onchange="changeIntern(${id},this)" style="border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;padding:2px 6px;border-radius:4px;outline:none;">
+    ${opts.map(o=>`<option value="${o}" ${o===current?'selected':''}>${o||'— Unassigned'}</option>`).join('')}
+  </select>`;
+}
+
+function changeIntern(id, sel) {
+  const c = contacts.find(x=>x.id===id); if(!c) return;
+  c.intern = sel.value;
+  // Update row class
+  const row = sel.closest('tr');
+  row.className = internClass(c.intern);
+  // Update select styling
+  sel.className = 'intern-select ibadge ' + (c.intern ? 'ibadge-'+c.intern.toLowerCase() : '');
+  save(); toast('Intern updated');
+}
+
 function renderContacts() {
   filtered = getFiltered();
-  const total = filtered.length;
-  const pages = Math.ceil(total/pageSize);
-  if(currentPage>pages) currentPage=1;
-  const start=(currentPage-1)*pageSize, end=Math.min(start+pageSize,total);
-  const slice = filtered.slice(start,end);
-  document.getElementById('result-count').textContent = total+' results';
-  document.getElementById('page-info').textContent = `${start+1}–${end} of ${total}`;
-  document.getElementById('btn-prev').disabled = currentPage<=1;
-  document.getElementById('btn-next').disabled = currentPage>=pages;
-  document.getElementById('contacts-tbody').innerHTML = slice.map(c=>`
+  document.getElementById('result-count').textContent = filtered.length+' results';
+  document.getElementById('contacts-tbody').innerHTML = filtered.map(c=>`
     <tr class="${internClass(c.intern)}">
       <td><div class="hw-name name-link" onclick="openQP(${c.id})">${c.name}</div><div class="hw-sub">${c.title||''}</div></td>
       <td title="${c.assoc}" style="color:var(--muted);max-width:160px;">${c.assoc}</td>
       <td style="color:var(--muted)">${c.title||'—'}</td>
       <td>${c.phone||'—'}</td>
-      <td>${internBadge(c.intern)}</td>
+      <td>${internSelectHTML(c.id, c.intern)}</td>
       <td>${statusBadge(c)}</td>
       <td>${c.survey?`<span class="badge survey">${c.survey}</span>`:'—'}</td>
       <td>${c.review?`<span class="badge review">${c.review.slice(0,12)}</span>`:'—'}</td>
@@ -463,9 +470,8 @@ function renderContacts() {
 
 function sortBy(field) {
   if(sortField===field) sortDir*=-1; else { sortField=field; sortDir=1; }
-  currentPage=1; renderContacts();
+  renderContacts();
 }
-function changePage(dir) { currentPage+=dir; renderContacts(); }
 
 function editContact(id) {
   const c = contacts.find(x=>x.id===id); if(!c) return;
