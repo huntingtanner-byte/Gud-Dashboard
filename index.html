@@ -11,7 +11,7 @@
   --primary:#3CB95C;--primary-dark:#2EA04A;--primary-light:#EAF7EF;--primary-text:#1E6B37;
   --amber:#D97706;--amber-bg:#FEF3C7;--red:#DC2626;--red-bg:#FEE2E2;
   --blue:#2563EB;--blue-bg:#EFF6FF;
-  --sidebar:#2EA04A;--bg:#F2F4F7;--card:#fff;--border:#E2E7EC;
+  --sidebar:#1B2A3B;--bg:#F2F4F7;--card:#fff;--border:#E2E7EC;
   --shadow:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
   --shadow-md:0 4px 16px rgba(0,0,0,.08);--text:#111827;--muted:#6B7280;--sidebar-w:230px;
 }
@@ -23,9 +23,9 @@ body{font-family:"DM Sans",sans-serif;background:var(--bg);color:var(--text);dis
 .nav-section{padding:1rem .75rem;flex:1;}
 .nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;cursor:pointer;font-size:13.5px;color:rgba(255,255,255,.55);font-weight:500;transition:background .15s,color .15s;margin-bottom:2px;}
 .nav-item:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.9);}
-.nav-item.active{background:rgba(0,0,0,.15);color:#fff;font-weight:600;}
-.nav-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.35);flex-shrink:0;transition:background .15s;}
-.nav-item.active .nav-dot{background:#fff;}
+.nav-item.active{background:rgba(60,185,92,.14);color:#4FCB6E;font-weight:600;}
+.nav-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.2);flex-shrink:0;transition:background .15s;}
+.nav-item.active .nav-dot{background:#3CB95C;}
 .sidebar-footer{padding:1rem 1.5rem;border-top:1px solid rgba(255,255,255,.07);font-size:11px;color:rgba(255,255,255,.25);}
 .main{margin-left:var(--sidebar-w);flex:1;padding:2rem 2.5rem;min-height:100vh;}
 .page{display:none;}
@@ -45,6 +45,13 @@ body{font-family:"DM Sans",sans-serif;background:var(--bg);color:var(--text);dis
 .metrics-3{grid-template-columns:repeat(3,minmax(0,1fr));}
 .metrics-2{grid-template-columns:repeat(2,minmax(0,1fr));}
 .metric{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.25rem 1.5rem;box-shadow:var(--shadow);}
+.metric{position:relative;overflow:hidden;}
+.metric::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:10px 10px 0 0;}
+.metric-accent-green::before{background:var(--primary);}
+.metric-accent-amber::before{background:var(--amber);}
+.metric-accent-red::before{background:var(--red);}
+.metric-accent-blue::before{background:var(--blue);}
+.metric-accent-gray::before{background:#cbd5e1;}
 .metric .mlabel{font-size:11px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;font-weight:700;margin-bottom:10px;}
 .metric .mval{font-size:30px;font-weight:700;color:var(--text);line-height:1;letter-spacing:-.02em;}
 .metric .msub{font-size:12px;color:var(--muted);margin-top:6px;}
@@ -136,7 +143,7 @@ tr.int-timaeus td{background:#e8eaf6;}tr.int-timaeus:hover td{background:#c5cae9
   <div class="nav-section">
     <div class="nav-item active" onclick="nav('dashboard',this)"><span class="nav-dot"></span> Dashboard</div>
     <div class="nav-item" onclick="nav('contacts',this)"><span class="nav-dot"></span> Board Contacts <span class="count-badge" id="nav-count"></span></div>
-    <div class="nav-item" onclick="nav('board',this)"><span class="nav-dot"></span> GUD Board</div>
+    <div class="nav-item" onclick="nav('board',this)"><span class="nav-dot"></span> Homeowners</div>
     <div class="nav-item" onclick="nav('reviews',this)"><span class="nav-dot"></span> Google Reviews</div>
   </div>
   <div class="sidebar-footer">GUD Community · Arizona</div>
@@ -148,17 +155,20 @@ tr.int-timaeus td{background:#e8eaf6;}tr.int-timaeus:hover td{background:#c5cae9
   <div class="page active" id="page-dashboard">
     <div class="top-bar"><h1>Dashboard</h1></div>
     <div class="metrics metrics-4">
-      <div class="metric"><div class="mlabel">Total Contacts</div><div class="mval" id="m-total">0</div><div class="msub">Board members in system</div></div>
-      <div class="metric"><div class="mlabel">Contacted</div><div class="mval green" id="m-contacted">0</div><div class="msub">Reached successfully</div></div>
-      <div class="metric"><div class="mlabel">Surveys Done</div><div class="mval amber" id="m-survey">0</div><div class="msub">Completed survey</div></div>
-      <div class="metric"><div class="mlabel">Reviews Left</div><div class="mval" style="color:var(--blue)" id="m-review">0</div><div class="msub">Google reviews</div></div>
+      <div class="metric metric-accent-gray"><div class="mlabel">Total Contacts</div><div class="mval" id="m-total">0</div><div class="msub">Board members in system</div></div>
+      <div class="metric metric-accent-green"><div class="mlabel">Contacted</div><div class="mval green" id="m-contacted">0</div><div class="msub">Reached successfully</div></div>
+      <div class="metric metric-accent-amber"><div class="mlabel">Surveys Done</div><div class="mval amber" id="m-survey">0</div><div class="msub">Completed survey</div></div>
+      <div class="metric metric-accent-blue"><div class="mlabel">Reviews Left</div><div class="mval" style="color:var(--blue)" id="m-review">0</div><div class="msub">Google reviews</div></div>
     </div>
     <div class="metrics metrics-3">
-      <div class="metric"><div class="mlabel">VM / No Answer</div><div class="mval red" id="m-vm">0</div><div class="msub">Left voicemail</div></div>
-      <div class="metric"><div class="mlabel">Follow-Up Needed</div><div class="mval amber" id="m-followup">0</div><div class="msub">Call back required</div></div>
-      <div class="metric"><div class="mlabel">Google Rating</div><div class="mval amber" id="m-rating">—</div><div class="msub" id="m-rating-sub">Goal: 4.2+</div></div>
+      <div class="metric metric-accent-red"><div class="mlabel">VM / No Answer</div><div class="mval red" id="m-vm">0</div><div class="msub">Left voicemail</div></div>
+      <div class="metric metric-accent-amber"><div class="mlabel">Follow-Up Needed</div><div class="mval amber" id="m-followup">0</div><div class="msub">Needs a callback</div></div>
+      <div class="metric metric-accent-amber"><div class="mlabel">Google Rating</div><div class="mval amber" id="m-rating">—</div><div class="msub" id="m-rating-sub">Goal: 4.2+</div></div>
     </div>
-    <div class="section-title">Recent Contacts</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
+      <div class="section-title" style="margin-bottom:0;">Recent Activity</div>
+      <span style="font-size:12px;color:var(--muted)">Last 10 contacts reached</span>
+    </div>
     <div class="tcard"><table>
       <thead><tr><th>NAME</th><th>ASSOCIATION</th><th>INTERN</th><th>STATUS</th><th>SURVEY</th><th>REVIEW</th></tr></thead>
       <tbody id="dash-tbody"></tbody>
@@ -211,7 +221,7 @@ tr.int-timaeus td{background:#e8eaf6;}tr.int-timaeus:hover td{background:#c5cae9
 
   <!-- GUD BOARD -->
   <div class="page" id="page-board">
-    <div class="top-bar"><h1>GUD Board Members</h1><button class="btn btn-primary" onclick="openModal('add-board')">+ Add Member</button></div>
+    <div class="top-bar"><h1>Homeowners</h1><button class="btn btn-primary" onclick="openModal('add-board')">+ Add Homeowner</button></div>
     <div id="board-list"></div>
   </div>
 
