@@ -93,6 +93,30 @@ tr:hover td{background:#fafcfa;}
 .count-badge{background:rgba(255,255,255,.2);color:#fff;font-size:11px;padding:2px 7px;border-radius:99px;margin-left:6px;}
 .import-area{border:2px dashed var(--border);border-radius:12px;padding:2rem;text-align:center;margin-bottom:1.5rem;cursor:pointer;transition:border-color .15s;}
 .import-area:hover{border-color:#639922;}
+/* Intern row tints */
+tr.int-kate td{background:#fce4ec;}tr.int-kate:hover td{background:#f8bbd0;}
+tr.int-matt td{background:#ffebee;}tr.int-matt:hover td{background:#ffcdd2;}
+tr.int-mia td{background:#e8f5e9;}tr.int-mia:hover td{background:#c8e6c9;}
+tr.int-sam td{background:#e3f2fd;}tr.int-sam:hover td{background:#bbdefb;}
+tr.int-timaeus td{background:#e8eaf6;}tr.int-timaeus:hover td{background:#c5cae9;}
+.ibadge{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;}
+.ibadge-kate{background:#fce4ec;color:#c2185b;}.ibadge-matt{background:#ffebee;color:#c62828;}
+.ibadge-mia{background:#e8f5e9;color:#2e7d32;}.ibadge-sam{background:#e3f2fd;color:#1565c0;}
+.ibadge-timaeus{background:#e8eaf6;color:#283593;}
+.name-link{cursor:pointer;color:var(--text);}
+.name-link:hover{color:var(--green-text);text-decoration:underline;}
+.qp-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;justify-content:flex-end;}
+.qp-bg.open{display:flex;}
+.qp-panel{background:#fff;width:440px;height:100%;overflow-y:auto;padding:2rem;box-shadow:-8px 0 40px rgba(0,0,0,.12);display:flex;flex-direction:column;gap:16px;}
+.qp-panel h2{font-family:"DM Serif Display",serif;font-size:20px;font-weight:400;}
+.qp-meta{font-size:13px;color:var(--muted);line-height:1.9;background:var(--bg);border-radius:10px;padding:12px 14px;}
+.qp-meta strong{color:var(--text);}
+.note-entry{background:var(--bg);border-radius:8px;padding:10px 12px;font-size:12.5px;line-height:1.6;margin-bottom:6px;}
+.note-entry .note-ts{font-size:11px;color:var(--muted);margin-bottom:3px;font-weight:600;}
+.status-btns{display:flex;gap:6px;flex-wrap:wrap;}
+.status-btn{padding:5px 14px;border-radius:99px;border:1px solid var(--border);background:#fff;font-size:12px;cursor:pointer;font-family:"DM Sans",sans-serif;font-weight:500;transition:all .15s;}
+.status-btn:hover{border-color:#639922;}
+.status-btn.active-s{border-color:#1a4a2e;background:#1a4a2e;color:#fff;}
 .import-area p{color:var(--muted);font-size:13px;margin-top:6px;}
 </style>
 </head>
@@ -256,6 +280,37 @@ tr:hover td{background:#fafcfa;}
   </div>
 </div>
 
+<div class="qp-bg" id="qp-bg" onclick="if(event.target===this)closeQP()">
+  <div class="qp-panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h2 id="qp-name">Contact</h2>
+      <button class="btn btn-outline btn-sm" onclick="closeQP()">✕ Close</button>
+    </div>
+    <div class="qp-meta" id="qp-meta"></div>
+    <div>
+      <div style="font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px;">Outreach Status</div>
+      <div class="status-btns">
+        <button class="status-btn" data-s="contacted" onclick="qpSetStatus('contacted')">Contacted</button>
+        <button class="status-btn" data-s="vm" onclick="qpSetStatus('vm')">VM</button>
+        <button class="status-btn" data-s="followup" onclick="qpSetStatus('followup')">Follow-up</button>
+        <button class="status-btn" data-s="none" onclick="qpSetStatus('none')">No Contact</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Add Note</label>
+      <textarea id="qp-note-input" style="width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;min-height:70px;resize:vertical;outline:none;" placeholder="Add a timestamped note..."></textarea>
+      <button class="btn btn-primary btn-sm" style="margin-top:6px;" onclick="qpAddNote()">Add Note</button>
+    </div>
+    <div>
+      <div style="font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px;">Notes History</div>
+      <div id="qp-notes-list"></div>
+    </div>
+    <div style="margin-top:auto;padding-top:1rem;border-top:1px solid var(--border);display:flex;gap:8px;">
+      <button class="btn btn-primary" style="flex:1;" onclick="qpSave()">Save Changes</button>
+      <button class="btn btn-outline" onclick="qpOpenFull()">Full Edit</button>
+    </div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -302,6 +357,9 @@ function populateInternFilter() {
   interns.forEach(i=>{ const o=document.createElement('option'); o.value=i; o.textContent=i; sel.appendChild(o); });
 }
 
+function internClass(intern){if(!intern)return '';const k=intern.trim().toLowerCase();return k==='kate'?'int-kate':k==='matt'?'int-matt':k==='mia'?'int-mia':k==='sam'?'int-sam':k==='timaeus'?'int-timaeus':'';}
+function internBadge(intern){if(!intern)return '—';const k=intern.trim().toLowerCase();const cls=k==='kate'?'ibadge-kate':k==='matt'?'ibadge-matt':k==='mia'?'ibadge-mia':k==='sam'?'ibadge-sam':k==='timaeus'?'ibadge-timaeus':'';return `<span class="ibadge ${cls}">${intern}</span>`;}
+
 function getStatus(c) {
   const ct = (c.contact||'').toLowerCase();
   if(ct.includes('contact') || ct.includes('spoke') || ct.includes('completed') || ct.includes('awesome') || ct.includes('great') || ct.includes('loves')) return 'contacted';
@@ -344,10 +402,10 @@ function renderDash() {
   document.getElementById('r-count').textContent = reviews.length ? reviews.length+' review'+(reviews.length>1?'s':'') : 'No reviews logged';
   const recent = contacts.filter(c=>c.contact&&c.contact.trim()).slice(0,10);
   document.getElementById('dash-tbody').innerHTML = recent.map(c=>`
-    <tr>
-      <td><div class="hw-name">${c.name}</div><div class="hw-sub">${c.email||''}</div></td>
+    <tr class="${internClass(c.intern)}">
+      <td><div class="hw-name name-link" onclick="openQP(${c.id})">${c.name}</div><div class="hw-sub">${c.email||''}</div></td>
       <td style="color:var(--muted)">${c.assoc}</td>
-      <td>${c.intern||'—'}</td>
+      <td>${internBadge(c.intern)}</td>
       <td>${statusBadge(c)}</td>
       <td>${c.survey?`<span class="badge survey">${c.survey}</span>`:'—'}</td>
       <td>${c.review?`<span class="badge review">${c.review.slice(0,15)}</span>`:'—'}</td>
@@ -383,12 +441,12 @@ function renderContacts() {
   document.getElementById('btn-prev').disabled = currentPage<=1;
   document.getElementById('btn-next').disabled = currentPage>=pages;
   document.getElementById('contacts-tbody').innerHTML = slice.map(c=>`
-    <tr>
-      <td><div class="hw-name">${c.name}</div><div class="hw-sub">${c.title||''}</div></td>
+    <tr class="${internClass(c.intern)}">
+      <td><div class="hw-name name-link" onclick="openQP(${c.id})">${c.name}</div><div class="hw-sub">${c.title||''}</div></td>
       <td title="${c.assoc}" style="color:var(--muted);max-width:160px;">${c.assoc}</td>
       <td style="color:var(--muted)">${c.title||'—'}</td>
       <td>${c.phone||'—'}</td>
-      <td>${c.intern||'—'}</td>
+      <td>${internBadge(c.intern)}</td>
       <td>${statusBadge(c)}</td>
       <td>${c.survey?`<span class="badge survey">${c.survey}</span>`:'—'}</td>
       <td>${c.review?`<span class="badge review">${c.review.slice(0,12)}</span>`:'—'}</td>
@@ -425,7 +483,7 @@ function saveContact() {
   const name=document.getElementById('c-name').value.trim();
   if(!name){alert('Name required');return;}
   const data={name,assoc:document.getElementById('c-assoc').value.trim(),title:document.getElementById('c-title').value.trim(),phone:document.getElementById('c-phone').value.trim(),email:document.getElementById('c-email').value.trim(),intern:document.getElementById('c-intern').value.trim(),survey:document.getElementById('c-survey').value.trim(),review:document.getElementById('c-review').value.trim(),followup:document.getElementById('c-followup').value.trim(),duration:document.getElementById('c-duration').value.trim(),contact:document.getElementById('c-contact').value.trim()};
-  if(editingId){const i=contacts.findIndex(x=>x.id===editingId);if(i>=0)contacts[i]={...contacts[i],...data};toast('Contact updated');}
+  if(editingId){const i=contacts.findIndex(x=>x.id===editingId);if(i>=0)contacts[i]={...contacts[i],...data,notes:contacts[i].notes||[]};toast('Contact updated');}
   else{contacts.push({id:Date.now(),...data});toast('Contact added');}
   save();renderAll();closeModal('add-contact');
 }
@@ -457,6 +515,47 @@ function saveReview() {
   toast('Review added');
 }
 function deleteReview(i){if(!confirm('Remove?'))return;reviews.splice(i,1);save();renderAll();}
+
+let qpId=null,qpStatusVal='';
+function openQP(id){
+  const c=contacts.find(x=>x.id===id);if(!c)return;
+  qpId=id; qpStatusVal=c.contact||'';
+  document.getElementById('qp-name').textContent=c.name;
+  document.getElementById('qp-meta').innerHTML=`<div><strong>Association:</strong> ${c.assoc||'—'}</div><div><strong>Title:</strong> ${c.title||'—'}</div><div><strong>Phone:</strong> ${c.phone||'—'}</div><div><strong>Email:</strong> ${c.email||'—'}</div><div><strong>Intern:</strong> ${internBadge(c.intern)}</div><div><strong>Survey:</strong> ${c.survey||'—'}</div><div><strong>Review:</strong> ${c.review||'—'}</div>`;
+  renderQPStatusBtns(c);
+  renderQPNotes(c);
+  document.getElementById('qp-note-input').value='';
+  document.getElementById('qp-bg').classList.add('open');
+}
+function closeQP(){document.getElementById('qp-bg').classList.remove('open');qpId=null;}
+function renderQPStatusBtns(c){
+  const cur=getStatus(c);
+  document.querySelectorAll('.status-btn').forEach(btn=>{btn.classList.toggle('active-s',btn.getAttribute('data-s')===cur);});
+}
+function qpSetStatus(s){
+  const map={contacted:'Contacted',vm:'VM',followup:'Follow-up needed',none:''};
+  qpStatusVal=map[s];
+  const tmp={contact:qpStatusVal};
+  document.querySelectorAll('.status-btn').forEach(btn=>{btn.classList.toggle('active-s',btn.getAttribute('data-s')===getStatus(tmp));});
+}
+function renderQPNotes(c){
+  const notes=c.notes||[];
+  const el=document.getElementById('qp-notes-list');
+  el.innerHTML=notes.length?[...notes].reverse().map(n=>`<div class="note-entry"><div class="note-ts">${n.ts}</div>${n.text}</div>`).join(''):'<div style="font-size:13px;color:var(--muted)">No notes yet.</div>';
+}
+function qpAddNote(){
+  const text=document.getElementById('qp-note-input').value.trim();if(!text)return;
+  const c=contacts.find(x=>x.id===qpId);if(!c)return;
+  if(!c.notes)c.notes=[];
+  c.notes.push({ts:new Date().toLocaleString(),text});
+  document.getElementById('qp-note-input').value='';
+  renderQPNotes(c);save();toast('Note added');
+}
+function qpSave(){
+  const c=contacts.find(x=>x.id===qpId);if(!c)return;
+  c.contact=qpStatusVal;save();renderAll();toast('Contact updated');closeQP();
+}
+function qpOpenFull(){const id=qpId;closeQP();editContact(id);}
 
 function exportCSV() {
   const rows=[['Name','Association','Title','Phone','Email','Intern','Contact Status','Survey','Review','Follow-up','Duration']];
