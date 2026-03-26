@@ -145,7 +145,6 @@ tr.int-timeus td{background:#e8eaf6;}tr.int-timeus:hover td{background:#c5cae9;}
     <div class="nav-item" onclick="nav('contacts',this)"><span class="nav-dot"></span> Board Contacts <span class="count-badge" id="nav-count"></span></div>
     <div class="nav-item" onclick="nav('board',this)"><span class="nav-dot"></span> Homeowners</div>
     <div class="nav-item" onclick="nav('reviews',this)"><span class="nav-dot"></span> Google Reviews</div>
-    <div class="nav-item" onclick="nav('testimonials',this)"><span class="nav-dot"></span> Testimonials</div>
   </div>
   <div class="sidebar-footer">GUD Community · Arizona</div>
 </div>
@@ -154,26 +153,49 @@ tr.int-timeus td{background:#e8eaf6;}tr.int-timeus:hover td{background:#c5cae9;}
 
   <!-- DASHBOARD -->
   <div class="page active" id="page-dashboard">
-    <div class="top-bar"><h1>Dashboard</h1></div>
+    <div class="top-bar">
+      <h1>Dashboard</h1>
+      <div style="font-size:13px;color:var(--muted)" id="dash-date"></div>
+    </div>
+    <div class="metrics metrics-3" style="margin-bottom:1.25rem;">
+      <div class="metric metric-accent-gray" style="padding:1.75rem 2rem;">
+        <div class="mlabel">Total Contacts</div>
+        <div class="mval" id="m-total" style="font-size:42px;">0</div>
+        <div class="msub">Board members in system</div>
+      </div>
+      <div class="metric metric-accent-green" style="padding:1.75rem 2rem;">
+        <div class="mlabel">Contacted</div>
+        <div class="mval green" id="m-contacted" style="font-size:42px;">0</div>
+        <div class="msub" id="m-contacted-pct">Reached successfully</div>
+      </div>
+      <div class="metric metric-accent-blue" style="padding:1.75rem 2rem;">
+        <div class="mlabel">Reviews Left</div>
+        <div class="mval" style="font-size:42px;color:var(--blue)" id="m-review">0</div>
+        <div class="msub">Google reviews submitted</div>
+      </div>
+    </div>
     <div class="metrics metrics-4">
-      <div class="metric metric-accent-gray"><div class="mlabel">Total Contacts</div><div class="mval" id="m-total">0</div><div class="msub">Board members in system</div></div>
-      <div class="metric metric-accent-green"><div class="mlabel">Contacted</div><div class="mval green" id="m-contacted">0</div><div class="msub">Reached successfully</div></div>
-      <div class="metric metric-accent-amber"><div class="mlabel">Surveys Done</div><div class="mval amber" id="m-survey">0</div><div class="msub">Completed survey</div></div>
-      <div class="metric metric-accent-blue"><div class="mlabel">Reviews Left</div><div class="mval" style="color:var(--blue)" id="m-review">0</div><div class="msub">Google reviews</div></div>
+      <div class="metric metric-accent-amber">
+        <div class="mlabel">Surveys Done</div>
+        <div class="mval amber" id="m-survey">0</div>
+        <div class="msub">Completed survey</div>
+      </div>
+      <div class="metric metric-accent-red">
+        <div class="mlabel">VM / No Answer</div>
+        <div class="mval red" id="m-vm">0</div>
+        <div class="msub">Left voicemail</div>
+      </div>
+      <div class="metric metric-accent-amber">
+        <div class="mlabel">Follow-Up Needed</div>
+        <div class="mval amber" id="m-followup">0</div>
+        <div class="msub">Needs a callback</div>
+      </div>
+      <div class="metric metric-accent-amber">
+        <div class="mlabel">Google Rating</div>
+        <div class="mval amber" id="m-rating">—</div>
+        <div class="msub" id="m-rating-sub">Goal: 4.2+</div>
+      </div>
     </div>
-    <div class="metrics metrics-3">
-      <div class="metric metric-accent-red"><div class="mlabel">VM / No Answer</div><div class="mval red" id="m-vm">0</div><div class="msub">Left voicemail</div></div>
-      <div class="metric metric-accent-amber"><div class="mlabel">Follow-Up Needed</div><div class="mval amber" id="m-followup">0</div><div class="msub">Needs a callback</div></div>
-      <div class="metric metric-accent-amber"><div class="mlabel">Google Rating</div><div class="mval amber" id="m-rating">—</div><div class="msub" id="m-rating-sub">Goal: 4.2+</div></div>
-    </div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
-      <div class="section-title" style="margin-bottom:0;">Recent Activity</div>
-      <span style="font-size:12px;color:var(--muted)">Last 10 contacts reached</span>
-    </div>
-    <div class="tcard"><table>
-      <thead><tr><th>NAME</th><th>ASSOCIATION</th><th>INTERN</th><th>STATUS</th><th>SURVEY</th><th>REVIEW</th></tr></thead>
-      <tbody id="dash-tbody"></tbody>
-    </table></div>
   </div>
 
   <!-- CONTACTS -->
@@ -220,10 +242,47 @@ tr.int-timeus td{background:#e8eaf6;}tr.int-timeus:hover td{background:#c5cae9;}
     </div>
   </div>
 
-  <!-- GUD BOARD -->
+  <!-- HOMEOWNERS -->
   <div class="page" id="page-board">
     <div class="top-bar"><h1>Homeowners</h1><button class="btn btn-primary" onclick="openModal('add-board')">+ Add Homeowner</button></div>
     <div id="board-list"></div>
+    <div style="margin-top:2rem;">
+      <div class="section-title">Testimonials</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;">
+        <div class="tcard" style="padding:1.5rem;">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem;">
+            <div style="width:40px;height:40px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:var(--primary-dark);">S</div>
+            <div><div style="font-weight:600;font-size:14px;">Sydney Mitchell</div><div style="font-size:12px;color:var(--muted);">GUD Community · Jonathan Brown</div></div>
+          </div>
+          <div style="font-size:13px;color:var(--text);line-height:1.7;font-style:italic;">"GUD's leadership and managers were professional, honest, people-focused, and consistently attentive, making the transition smooth and ongoing support exceptional."</div>
+          <div style="margin-top:1rem;display:flex;gap:2px;"><span style="color:#F59E0B;">★</span><span style="color:#F59E0B;">★</span><span style="color:#F59E0B;">★</span><span style="color:#F59E0B;">★</span><span style="color:#F59E0B;">★</span></div>
+        </div>
+        <div class="tcard" style="padding:1.5rem;">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem;">
+            <div style="width:40px;height:40px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:var(--primary-dark);">L</div>
+            <div><div style="font-weight:600;font-size:14px;">Linda Miller</div><div style="font-size:12px;color:var(--muted);">GUD Community · Elizabeth</div></div>
+          </div>
+          <div style="font-size:13px;color:var(--text);line-height:1.7;font-style:italic;">"First 5-star experience I have had recently."</div>
+          <div style="margin-top:1rem;display:flex;gap:2px;"><span style="color:#F59E0B;">★</span><span style="color:#F59E0B;">★</span><span style="color:#F59E0B;">★</span><span style="color:#F59E0B;">★</span><span style="color:#F59E0B;">★</span></div>
+        </div>
+        <div class="tcard" style="padding:1.5rem;">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem;">
+            <div style="width:40px;height:40px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:var(--primary-dark);">D</div>
+            <div><div style="font-weight:600;font-size:14px;">Danitza Zavala</div><div style="font-size:12px;color:var(--muted);">GUD Community · Nery Ralon</div></div>
+          </div>
+          <div style="font-size:13px;color:var(--text);line-height:1.7;font-style:italic;">"The team was responsive and helped resolve my account issue quickly — they waived my December late fee without any hassle."</div>
+          <div style="margin-top:1rem;"><span class="badge contacted">Issue Resolved</span></div>
+        </div>
+        <div class="tcard" style="padding:1.5rem;">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem;">
+            <div style="width:40px;height:40px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:var(--primary-dark);">K</div>
+            <div><div style="font-weight:600;font-size:14px;">Karina Mehta</div><div style="font-size:12px;color:var(--muted);">Los Coronados · Kelley Monge</div></div>
+          </div>
+          <div style="font-size:13px;color:var(--text);line-height:1.7;font-style:italic;">"My pool key stopped working and the team guided me through getting a replacement — fast and easy."</div>
+          <div style="margin-top:1rem;"><span class="badge contacted">Issue Resolved</span></div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- REVIEWS -->
@@ -236,63 +295,6 @@ tr.int-timeus td{background:#e8eaf6;}tr.int-timeus:hover td{background:#c5cae9;}
     <div id="review-list"></div>
   </div>
 
-  <!-- TESTIMONIALS -->
-  <div class="page" id="page-testimonials">
-    <div class="top-bar">
-      <h1>Homeowner Testimonials</h1>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;">
-
-      <div class="tcard" style="padding:1.5rem;">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem;">
-          <div style="width:40px;height:40px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:var(--primary-dark);">S</div>
-          <div>
-            <div style="font-weight:600;font-size:14px;">Sydney Mitchell</div>
-            <div style="font-size:12px;color:var(--muted);">GUD Community · Jonathan Brown</div>
-          </div>
-        </div>
-        <div style="font-size:13px;color:var(--text);line-height:1.7;font-style:italic;">"GUD's leadership and managers were professional, honest, people-focused, and consistently attentive, making the transition smooth and ongoing support exceptional."</div>
-        <div style="margin-top:1rem;display:flex;gap:4px;"><span style="color:#F59E0B;font-size:14px;">★</span><span style="color:#F59E0B;font-size:14px;">★</span><span style="color:#F59E0B;font-size:14px;">★</span><span style="color:#F59E0B;font-size:14px;">★</span><span style="color:#F59E0B;font-size:14px;">★</span></div>
-      </div>
-
-      <div class="tcard" style="padding:1.5rem;">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem;">
-          <div style="width:40px;height:40px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:var(--primary-dark);">L</div>
-          <div>
-            <div style="font-weight:600;font-size:14px;">Linda Miller</div>
-            <div style="font-size:12px;color:var(--muted);">GUD Community · Elizabeth</div>
-          </div>
-        </div>
-        <div style="font-size:13px;color:var(--text);line-height:1.7;font-style:italic;">"First 5-star experience I have had recently."</div>
-        <div style="margin-top:1rem;display:flex;gap:4px;"><span style="color:#F59E0B;font-size:14px;">★</span><span style="color:#F59E0B;font-size:14px;">★</span><span style="color:#F59E0B;font-size:14px;">★</span><span style="color:#F59E0B;font-size:14px;">★</span><span style="color:#F59E0B;font-size:14px;">★</span></div>
-      </div>
-
-      <div class="tcard" style="padding:1.5rem;">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem;">
-          <div style="width:40px;height:40px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:var(--primary-dark);">D</div>
-          <div>
-            <div style="font-weight:600;font-size:14px;">Danitza Zavala</div>
-            <div style="font-size:12px;color:var(--muted);">GUD Community · Nery Ralon</div>
-          </div>
-        </div>
-        <div style="font-size:13px;color:var(--text);line-height:1.7;font-style:italic;">"The team was responsive and helped resolve my account issue quickly — they waived my December late fee without any hassle."</div>
-        <div style="margin-top:1rem;"><span class="badge contacted">Issue Resolved</span></div>
-      </div>
-
-      <div class="tcard" style="padding:1.5rem;">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem;">
-          <div style="width:40px;height:40px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:var(--primary-dark);">K</div>
-          <div>
-            <div style="font-weight:600;font-size:14px;">Karina Mehta</div>
-            <div style="font-size:12px;color:var(--muted);">Los Coronados · Kelley Monge</div>
-          </div>
-        </div>
-        <div style="font-size:13px;color:var(--text);line-height:1.7;font-style:italic;">"My pool key stopped working and the team guided me through getting a replacement — fast and easy."</div>
-        <div style="margin-top:1rem;"><span class="badge contacted">Issue Resolved</span></div>
-      </div>
-
-    </div>
-  </div>
 </div>
 
 <!-- MODALS -->
@@ -463,6 +465,7 @@ function renderDash() {
   const review = contacts.filter(c=>c.review&&c.review.trim()&&c.review!=='-').length;
   document.getElementById('m-total').textContent = total;
   document.getElementById('m-contacted').textContent = contacted;
+  document.getElementById('m-contacted-pct').textContent = total ? Math.round(contacted/total*100)+'% of contacts' : 'Reached successfully';
   document.getElementById('m-vm').textContent = vm;
   document.getElementById('m-followup').textContent = followup;
   document.getElementById('m-survey').textContent = survey;
@@ -472,16 +475,7 @@ function renderDash() {
   document.getElementById('m-rating-sub').textContent = reviews.length ? reviews.length+' reviews · Goal: 4.2+' : 'Goal: 4.2+';
   document.getElementById('r-avg').textContent = avg!=='—' ? avg+'★' : '—';
   document.getElementById('r-count').textContent = reviews.length ? reviews.length+' review'+(reviews.length>1?'s':'') : 'No reviews logged';
-  const recent = contacts.filter(c=>c.contact&&c.contact.trim()).slice(0,10);
-  document.getElementById('dash-tbody').innerHTML = recent.map(c=>`
-    <tr class="${internClass(c.intern)}">
-      <td><div class="hw-name name-link" onclick="openQP(${c.id})">${c.name}</div><div class="hw-sub">${c.email||''}</div></td>
-      <td style="color:var(--muted)">${c.assoc}</td>
-      <td>${internBadge(c.intern)}</td>
-      <td>${statusBadge(c)}</td>
-      <td>${c.survey?`<span class="badge survey">${c.survey}</span>`:'—'}</td>
-      <td>${c.review?`<span class="badge review">${c.review.slice(0,15)}</span>`:'—'}</td>
-    </tr>`).join('');
+  document.getElementById('dash-date').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
 }
 
 function getFiltered() {
