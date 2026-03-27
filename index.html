@@ -270,7 +270,10 @@ tr.int-timeus td{background:#e8eaf6;}tr.int-timeus:hover td{background:#c5cae9;}
   <div class="page active" id="page-dashboard">
     <div class="top-bar">
       <h1>Dashboard</h1>
-      <div style="font-size:13px;color:var(--muted)" id="dash-date"></div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="btn btn-outline btn-sm" onclick="quickAddLowReview()" style="border-color:#DC2626;color:#DC2626;">+ Flag Low Review</button>
+        <div style="font-size:13px;color:var(--muted)" id="dash-date"></div>
+      </div>
     </div>
 
     <!-- Top metrics row -->
@@ -1274,6 +1277,20 @@ function addNewLowReview() {
   editingLowReviewId = null;
   document.getElementById('low-modal-title').textContent = 'Add Low Review';
   ['low-name','low-phone','low-email','low-community','low-date','low-contacted','low-notes'].forEach(f=>document.getElementById(f).value='');
+  document.getElementById('delete-low-btn').style.display = 'none';
+  openModal('add-lowreview');
+}
+
+function quickAddLowReview() {
+  editingLowReviewId = null;
+  document.getElementById('low-modal-title').textContent = '🚨 Flag Low Review';
+  document.getElementById('low-name').value = '';
+  document.getElementById('low-phone').value = '';
+  document.getElementById('low-email').value = '';
+  document.getElementById('low-community').value = '';
+  document.getElementById('low-date').value = 'Just now';
+  document.getElementById('low-contacted').value = '';
+  document.getElementById('low-notes').value = '';
   document.getElementById('delete-low-btn').style.display = 'none';
   openModal('add-lowreview');
 }
