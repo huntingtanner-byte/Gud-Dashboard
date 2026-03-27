@@ -232,10 +232,10 @@ tr.int-timeus td{background:#e8eaf6;}tr.int-timeus:hover td{background:#c5cae9;}
   <div class="nav-section">
     <div class="nav-item active" onclick="nav('dashboard',this)"><span class="nav-dot"></span> Dashboard</div>
     <div class="nav-item" onclick="nav('contacts',this)"><span class="nav-dot"></span> Board Contacts <span class="count-badge" id="nav-count"></span></div>
-    <div class="nav-item" onclick="nav('board',this)"><span class="nav-dot"></span> Homeowners</div>
     <div class="nav-item" onclick="nav('reviews',this)"><span class="nav-dot"></span> Google Reviews</div>
-    <div class="nav-item" onclick="nav('networking',this)"><span class="nav-dot"></span> Networking</div>
     <div class="nav-item" onclick="nav('lowreviews',this)"><span class="nav-dot"></span> 1 & 2 Star Reviews</div>
+    <div class="nav-item" onclick="nav('board',this)"><span class="nav-dot"></span> Homeowners</div>
+    <div class="nav-item" onclick="nav('networking',this)"><span class="nav-dot"></span> Networking</div>
   </div>
   <div class="sidebar-footer">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
@@ -451,10 +451,50 @@ tr.int-timeus td{background:#e8eaf6;}tr.int-timeus:hover td{background:#c5cae9;}
 
   <!-- REVIEWS -->
   <div class="page" id="page-reviews">
-    <div class="top-bar"><h1>Google Reviews</h1><button class="btn btn-primary" onclick="openModal('add-review')">+ Add Review</button></div>
-    <div class="metrics metrics-2" style="margin-bottom:1.5rem;">
-      <div class="metric"><div class="mlabel">Current Rating</div><div class="mval amber" id="r-avg">—</div><div class="msub" id="r-count">No reviews logged</div></div>
-      <div class="metric"><div class="mlabel">Goal</div><div class="mval">4.2+</div><div class="msub">Target rating</div></div>
+    <div class="top-bar">
+      <h1>Google Reviews</h1>
+      <div style="display:flex;gap:8px;">
+        <label class="btn btn-outline" style="cursor:pointer;">
+          Import CSV
+          <input type="file" accept=".csv" onchange="importReviewsCSV(this)" style="display:none;"/>
+        </label>
+        <button class="btn btn-primary" onclick="openModal('add-review')">+ Add Review</button>
+      </div>
+    </div>
+    <div class="metrics metrics-4" style="margin-bottom:1.5rem;">
+      <div class="metric metric-accent-gray">
+        <div class="mlabel">Total Reviews</div>
+        <div class="mval" id="r-total">0</div>
+        <div class="msub">All Google reviews</div>
+      </div>
+      <div class="metric">
+        <div class="mlabel">Current Rating</div>
+        <div class="mval amber" id="r-avg">—</div>
+        <div class="msub" id="r-count">No reviews logged</div>
+      </div>
+      <div class="metric">
+        <div class="mlabel">Goal</div>
+        <div class="mval green">4.2+</div>
+        <div class="msub">Target rating</div>
+      </div>
+      <div class="metric metric-accent-red">
+        <div class="mlabel">Low Reviews</div>
+        <div class="mval red" id="r-low">0</div>
+        <div class="msub">1-3 stars (needs attention)</div>
+      </div>
+    </div>
+    <p style="color:var(--muted);font-size:12px;margin-bottom:1rem;">Import reviews via CSV with columns: Name, Stars, Date, Review Text (or similar). The system will auto-detect columns.</p>
+    <div class="controls" style="margin-bottom:1rem;">
+      <select class="filter" id="filter-reviews" onchange="renderReviews()">
+        <option value="">All reviews</option>
+        <option value="5">5 stars</option>
+        <option value="4">4 stars</option>
+        <option value="3">3 stars</option>
+        <option value="2">2 stars</option>
+        <option value="1">1 star</option>
+        <option value="low">Low reviews (1-3)</option>
+      </select>
+      <span id="review-filter-count" style="font-size:13px;color:var(--muted);margin-left:4px;"></span>
     </div>
     <div id="review-list"></div>
   </div>
@@ -977,9 +1017,10 @@ function renderDash() {
   document.getElementById('m-progress-bar').style.width = pct+'%';
   document.getElementById('m-unreached').textContent = unreached;
   document.getElementById('m-unreached-pct').textContent = total ? Math.round(unreached/total*100)+'% remaining' : 'Need first contact';
-  // Google Reviews stats (from Google Business Profile)
-  const googleReviewCount = 691;
-  const googleAvgRating = 3.9;
+  // Google Reviews stats (calculated from imported reviews)
+  const googleReviewCount = reviews.length || 0;
+  const googleAvgRating = googleReviewCount ? (reviews.reduce((sum,r)=>sum+(r.stars||0),0)/googleReviewCount).toFixed(1) : '—';
+  const googleAvgNum = parseFloat(googleAvgRating) || 0;
 
   document.getElementById('m-vm').textContent = vm;
   document.getElementById('m-followup').textContent = followup;
@@ -987,17 +1028,12 @@ function renderDash() {
   document.getElementById('m-review').textContent = googleReviewCount;
 
   // Color logic: green >= 4.2, red <= 2.9, yellow otherwise
-  const ratingColor = googleAvgRating >= 4.2 ? 'green' : (googleAvgRating <= 2.9 ? 'red' : 'amber');
+  const ratingColor = googleAvgNum >= 4.2 ? 'green' : (googleAvgNum <= 2.9 ? 'red' : 'amber');
   const ratingEl = document.getElementById('m-rating');
-  const ratingElReviews = document.getElementById('r-avg');
 
-  ratingEl.textContent = googleAvgRating + '★';
+  ratingEl.textContent = googleReviewCount ? googleAvgRating + '★' : '—';
   ratingEl.className = 'mval ' + ratingColor;
-  document.getElementById('m-rating-sub').textContent = googleReviewCount + ' reviews · Goal: 4.2+';
-
-  ratingElReviews.textContent = googleAvgRating + '★';
-  ratingElReviews.className = 'mval ' + ratingColor;
-  document.getElementById('r-count').textContent = googleReviewCount + ' reviews';
+  document.getElementById('m-rating-sub').textContent = googleReviewCount ? googleReviewCount + ' reviews · Goal: 4.2+' : 'Import reviews to see rating';
   document.getElementById('dash-date').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
 
   // Intern breakdown
@@ -1130,25 +1166,167 @@ function deleteBoard(i){if(!confirm('Remove?'))return;gudBoard.splice(i,1);save(
 
 function renderReviews() {
   const el=document.getElementById('review-list');
-  if(!reviews.length){el.innerHTML='<div class="empty">No reviews logged yet.</div>';return;}
+
+  // Calculate stats
+  const total = reviews.length;
+  const avg = total ? (reviews.reduce((sum,r)=>sum+(r.stars||0),0)/total).toFixed(1) : '—';
+  const lowCount = reviews.filter(r=>(r.stars||5)<=3).length;
+
+  // Update stats display
+  document.getElementById('r-total').textContent = total;
+  document.getElementById('r-avg').textContent = avg !== '—' ? avg + '★' : '—';
+  document.getElementById('r-count').textContent = total ? total + ' reviews' : 'No reviews';
+  document.getElementById('r-low').textContent = lowCount;
+
+  // Color the rating
+  const avgNum = parseFloat(avg);
+  const ratingEl = document.getElementById('r-avg');
+  ratingEl.className = 'mval ' + (avgNum >= 4.2 ? 'green' : avgNum <= 2.9 ? 'red' : 'amber');
+
+  if(!total){el.innerHTML='<div class="empty">No reviews yet. Import a CSV or add reviews manually.</div>';return;}
+
+  // Filter reviews
+  const filterVal = document.getElementById('filter-reviews')?.value || '';
+  let filtered = reviews;
+  if(filterVal === 'low') {
+    filtered = reviews.filter(r=>(r.stars||5)<=3);
+  } else if(filterVal) {
+    filtered = reviews.filter(r=>r.stars===parseInt(filterVal));
+  }
+
+  document.getElementById('review-filter-count').textContent = `Showing ${filtered.length} of ${total}`;
+
+  // Group by region
   const regions=['Greater Phoenix','Southern Arizona'];
   const grouped={};
-  reviews.forEach((r,i)=>{const reg=r.region||'Other';if(!grouped[reg])grouped[reg]=[];grouped[reg].push({r,i});});
+  filtered.forEach((r,i)=>{const reg=r.region||'Other';if(!grouped[reg])grouped[reg]=[];grouped[reg].push({r,idx:reviews.indexOf(r)});});
+
   let html='';
   regions.forEach(reg=>{
     const items=grouped[reg];
     if(!items||!items.length)return;
-    html+=`<div style="margin-bottom:1.5rem;"><div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:0 2px 10px;">${reg}</div>`;
-    items.forEach(({r,i})=>{
-      html+=`<div class="review-card"><div style="display:flex;justify-content:space-between;align-items:flex-start;"><div><div style="font-weight:600;font-size:14px;">${r.name}</div><div style="margin-top:3px;">${[1,2,3,4,5].map(n=>`<span class="star${n>r.stars?' empty':''}">★</span>`).join('')}</div></div><div style="display:flex;gap:10px;align-items:center;">${r.date?'<span style="font-size:12px;color:var(--muted)">'+r.date+'</span>':''}<button class="btn btn-outline btn-sm btn-danger" onclick="deleteReview(${i})">Remove</button></div></div>${r.text?'<div style="font-size:13px;color:var(--muted);margin-top:8px;line-height:1.6">'+r.text+'</div>':''}</div>`;
+    html+=`<div style="margin-bottom:1.5rem;"><div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:0 2px 10px;">${reg} (${items.length})</div>`;
+    items.forEach(({r,idx})=>{
+      const isLow = (r.stars||5) <= 3;
+      html+=`<div class="review-card" style="${isLow?'border-left:3px solid var(--red);':''}"><div style="display:flex;justify-content:space-between;align-items:flex-start;"><div><div style="font-weight:600;font-size:14px;">${r.name}${isLow?' <span style="color:var(--red);font-size:11px;">⚠ LOW</span>':''}</div><div style="margin-top:3px;">${[1,2,3,4,5].map(n=>`<span class="star${n>r.stars?' empty':''}">★</span>`).join('')}</div></div><div style="display:flex;gap:10px;align-items:center;">${r.date?'<span style="font-size:12px;color:var(--muted)">'+r.date+'</span>':''}<button class="btn btn-outline btn-sm btn-danger" onclick="deleteReview(${idx})">Remove</button></div></div>${r.text?'<div style="font-size:13px;color:var(--muted);margin-top:8px;line-height:1.6">'+r.text+'</div>':''}</div>`;
     });
     html+=`</div>`;
   });
   // Any reviews without a known region
-  (grouped['Other']||[]).forEach(({r,i})=>{
-    html+=`<div class="review-card"><div style="display:flex;justify-content:space-between;align-items:flex-start;"><div><div style="font-weight:600;font-size:14px;">${r.name}</div><div style="margin-top:3px;">${[1,2,3,4,5].map(n=>`<span class="star${n>r.stars?' empty':''}">★</span>`).join('')}</div></div><div style="display:flex;gap:10px;align-items:center;">${r.date?'<span style="font-size:12px;color:var(--muted)">'+r.date+'</span>':''}<button class="btn btn-outline btn-sm btn-danger" onclick="deleteReview(${i})">Remove</button></div></div>${r.text?'<div style="font-size:13px;color:var(--muted);margin-top:8px;line-height:1.6">'+r.text+'</div>':''}</div>`;
-  });
+  const otherItems = grouped['Other']||[];
+  if(otherItems.length) {
+    html+=`<div style="margin-bottom:1.5rem;"><div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:0 2px 10px;">Other (${otherItems.length})</div>`;
+    otherItems.forEach(({r,idx})=>{
+      const isLow = (r.stars||5) <= 3;
+      html+=`<div class="review-card" style="${isLow?'border-left:3px solid var(--red);':''}"><div style="display:flex;justify-content:space-between;align-items:flex-start;"><div><div style="font-weight:600;font-size:14px;">${r.name}${isLow?' <span style="color:var(--red);font-size:11px;">⚠ LOW</span>':''}</div><div style="margin-top:3px;">${[1,2,3,4,5].map(n=>`<span class="star${n>r.stars?' empty':''}">★</span>`).join('')}</div></div><div style="display:flex;gap:10px;align-items:center;">${r.date?'<span style="font-size:12px;color:var(--muted)">'+r.date+'</span>':''}<button class="btn btn-outline btn-sm btn-danger" onclick="deleteReview(${idx})">Remove</button></div></div>${r.text?'<div style="font-size:13px;color:var(--muted);margin-top:8px;line-height:1.6">'+r.text+'</div>':''}</div>`;
+    });
+    html+=`</div>`;
+  }
   el.innerHTML=html;
+}
+
+// CSV Import for Reviews
+function importReviewsCSV(input) {
+  const file = input.files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result;
+    const lines = text.split('\n').filter(l=>l.trim());
+    if(lines.length < 2) { alert('CSV appears empty'); return; }
+
+    // Parse header row - be flexible with column names
+    const headerRow = lines[0].toLowerCase();
+    const headers = parseCSVLine(lines[0]).map(h=>h.toLowerCase().trim());
+
+    // Find column indices (flexible matching)
+    const nameIdx = headers.findIndex(h=>h.includes('name') || h.includes('reviewer'));
+    const starsIdx = headers.findIndex(h=>h.includes('star') || h.includes('rating') || h.includes('score'));
+    const dateIdx = headers.findIndex(h=>h.includes('date') || h.includes('time') || h.includes('created'));
+    const textIdx = headers.findIndex(h=>h.includes('text') || h.includes('comment') || h.includes('review') || h.includes('content'));
+    const regionIdx = headers.findIndex(h=>h.includes('region') || h.includes('location') || h.includes('area'));
+
+    if(nameIdx === -1 && starsIdx === -1) {
+      alert('Could not find Name or Stars/Rating column. Please ensure your CSV has headers like "Name", "Stars", "Rating", etc.');
+      return;
+    }
+
+    let imported = 0, skipped = 0;
+
+    for(let i = 1; i < lines.length; i++) {
+      const values = parseCSVLine(lines[i]);
+      if(!values.length) continue;
+
+      const name = nameIdx >= 0 ? values[nameIdx]?.trim() : 'Anonymous';
+      let stars = starsIdx >= 0 ? values[starsIdx]?.trim() : '5';
+      const date = dateIdx >= 0 ? values[dateIdx]?.trim() : '';
+      const text = textIdx >= 0 ? values[textIdx]?.trim() : '';
+      const region = regionIdx >= 0 ? values[regionIdx]?.trim() : '';
+
+      // Parse stars - handle various formats
+      stars = parseInt(stars) || parseStarRating(stars);
+      if(stars < 1 || stars > 5) stars = 5;
+
+      if(!name && !text) { skipped++; continue; }
+
+      // Check for duplicates by name + date + stars
+      const isDupe = reviews.some(r =>
+        r.name === name && r.stars === stars && (r.date === date || (!r.date && !date))
+      );
+
+      if(isDupe) { skipped++; continue; }
+
+      reviews.push({
+        id: Date.now() + i,
+        name: name || 'Anonymous',
+        stars,
+        date: date || '',
+        text: text || '',
+        region: region || 'Other',
+        updatedAt: Date.now()
+      });
+      imported++;
+    }
+
+    save();
+    renderAll();
+    toast(`Imported ${imported} reviews` + (skipped ? `, ${skipped} skipped (duplicates/empty)` : ''));
+    input.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function parseCSVLine(line) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+
+  for(let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if(char === '"') {
+      inQuotes = !inQuotes;
+    } else if(char === ',' && !inQuotes) {
+      result.push(current);
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  result.push(current);
+  return result.map(s=>s.replace(/^"|"$/g,'').trim());
+}
+
+function parseStarRating(str) {
+  if(!str) return 5;
+  str = str.toUpperCase();
+  if(str.includes('ONE') || str === '1') return 1;
+  if(str.includes('TWO') || str === '2') return 2;
+  if(str.includes('THREE') || str === '3') return 3;
+  if(str.includes('FOUR') || str === '4') return 4;
+  if(str.includes('FIVE') || str === '5') return 5;
+  const num = parseInt(str);
+  return (num >= 1 && num <= 5) ? num : 5;
 }
 function saveReview() {
   const name=document.getElementById('rv-name').value.trim();if(!name){alert('Name required');return;}
