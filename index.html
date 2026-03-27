@@ -893,18 +893,69 @@ function dashFilter(btn) {
 }
 
 function renderRecentActivity() {
-  const pool = contacts.filter(c=>c.contact&&c.contact.trim());
-  const filtered = dashInternFilter ? pool.filter(c=>c.intern===dashInternFilter) : pool;
+  // Combine all recent activity from contacts, networking, and low reviews
+  const allActivity = [];
+
+  // Add contacts with activity
+  contacts.filter(c=>c.contact&&c.contact.trim()).forEach(c=>{
+    allActivity.push({
+      type:'contact',
+      id:c.id,
+      name:c.name,
+      subtitle:c.assoc||'',
+      intern:c.intern,
+      status:statusBadge(c),
+      extra:c.survey?`<span class="badge survey">${c.survey}</span>`:'—',
+      updated:c.updatedAt||0
+    });
+  });
+
+  // Add networking contacts with activity
+  networking.filter(n=>n.status&&n.status.trim()).forEach(n=>{
+    const statusClass = (n.status||'').toLowerCase().includes('review') ? 'contacted' :
+                        (n.status||'').toLowerCase().includes('vm') ? 'vm' : 'followup';
+    allActivity.push({
+      type:'networking',
+      id:n.id,
+      name:n.name,
+      subtitle:n.title||'Networking',
+      intern:n.intern,
+      status:`<span class="badge ${statusClass}">${n.status}</span>`,
+      extra:'<span class="badge" style="background:#E0E7FF;color:#3730A3;">Networking</span>',
+      updated:n.updatedAt||0
+    });
+  });
+
+  // Add low reviews that have been contacted or have notes
+  lowReviews.filter(r=>r.contacted||r.notes).forEach(r=>{
+    allActivity.push({
+      type:'lowreview',
+      id:r.id,
+      name:r.name,
+      subtitle:r.community||'Low Review',
+      intern:'',
+      status:r.contacted?'<span class="badge contacted">Contacted</span>':'<span class="badge vm">Pending</span>',
+      extra:'<span class="badge" style="background:#FEE2E2;color:#991B1B;">1-2 Star</span>',
+      updated:r.updatedAt||0
+    });
+  });
+
+  // Sort by most recently updated
+  allActivity.sort((a,b)=>b.updated-a.updated);
+
+  // Filter by intern if selected
+  const filtered = dashInternFilter ? allActivity.filter(a=>a.intern===dashInternFilter) : allActivity;
   const recent = filtered.slice(0,15);
-  document.getElementById('dash-tbody').innerHTML = recent.length ? recent.map(c=>`
-    <tr class="${internClass(c.intern)}" style="cursor:pointer;" onclick="openQP(${c.id})">
-      <td><div class="hw-name">${c.name}</div><div class="hw-sub">${c.assoc}</div></td>
-      <td style="color:var(--muted);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.assoc}</td>
-      <td>${internBadge(c.intern)}</td>
-      <td>${statusBadge(c)}</td>
-      <td>${c.survey?`<span class="badge survey">${c.survey}</span>`:'—'}</td>
+
+  document.getElementById('dash-tbody').innerHTML = recent.length ? recent.map(a=>`
+    <tr class="${internClass(a.intern)}" style="cursor:pointer;" onclick="${a.type==='contact'?`openQP(${a.id})`:a.type==='networking'?`editNetworking(${a.id})`:`editLowReview(${a.id})`}">
+      <td><div class="hw-name">${a.name}</div><div class="hw-sub">${a.subtitle}</div></td>
+      <td style="color:var(--muted);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${a.subtitle}</td>
+      <td>${a.intern?internBadge(a.intern):'—'}</td>
+      <td>${a.status}</td>
+      <td>${a.extra}</td>
     </tr>`).join('')
-  : `<tr><td colspan="5" class="empty">No contacts with activity yet.</td></tr>`;
+  : `<tr><td colspan="5" class="empty">No recent activity yet.</td></tr>`;
 }
 
 function renderDash() {
@@ -1055,8 +1106,8 @@ function saveContact() {
   const name=document.getElementById('c-name').value.trim();
   if(!name){alert('Name required');return;}
   const data={name,assoc:document.getElementById('c-assoc').value.trim(),title:document.getElementById('c-title').value.trim(),phone:document.getElementById('c-phone').value.trim(),email:document.getElementById('c-email').value.trim(),intern:document.getElementById('c-intern').value.trim(),survey:document.getElementById('c-survey').value.trim(),review:document.getElementById('c-review').value.trim(),followup:document.getElementById('c-followup').value.trim(),duration:document.getElementById('c-duration').value.trim(),contact:document.getElementById('c-contact').value.trim()};
-  if(editingId){const i=contacts.findIndex(x=>x.id===editingId);if(i>=0)contacts[i]={...contacts[i],...data,notes:contacts[i].notes||[]};toast('Contact updated');}
-  else{contacts.push({id:Date.now(),...data});toast('Contact added');}
+  if(editingId){const i=contacts.findIndex(x=>x.id===editingId);if(i>=0)contacts[i]={...contacts[i],...data,notes:contacts[i].notes||[],updatedAt:Date.now()};toast('Contact updated');}
+  else{contacts.push({id:Date.now(),...data,updatedAt:Date.now()});toast('Contact added');}
   save();renderAll();closeModal('add-contact');
 }
 
@@ -1160,10 +1211,10 @@ function saveNetworking() {
   };
   if(editingNetworkingId) {
     const i = networking.findIndex(x=>x.id===editingNetworkingId);
-    if(i>=0) networking[i] = {...networking[i],...data};
+    if(i>=0) networking[i] = {...networking[i],...data,updatedAt:Date.now()};
     toast('Contact updated');
   } else {
-    networking.push({id:Date.now(),...data});
+    networking.push({id:Date.now(),...data,updatedAt:Date.now()});
     toast('Contact added');
   }
   save();renderNetworking();closeModal('add-networking');
@@ -1241,10 +1292,10 @@ function saveLowReview() {
   };
   if(editingLowReviewId) {
     const i = lowReviews.findIndex(x=>x.id===editingLowReviewId);
-    if(i>=0) lowReviews[i] = {...lowReviews[i],...data};
+    if(i>=0) lowReviews[i] = {...lowReviews[i],...data,updatedAt:Date.now()};
     toast('Review updated');
   } else {
-    lowReviews.unshift({id:Date.now(),...data});
+    lowReviews.unshift({id:Date.now(),...data,updatedAt:Date.now()});
     toast('Review added');
   }
   save();renderLowReviews();closeModal('add-lowreview');
@@ -1290,12 +1341,13 @@ function qpAddNote(){
   const c=contacts.find(x=>x.id===qpId);if(!c)return;
   if(!c.notes)c.notes=[];
   c.notes.push({ts:new Date().toLocaleString(),text});
+  c.updatedAt=Date.now();
   document.getElementById('qp-note-input').value='';
   renderQPNotes(c);save();toast('Note added');
 }
 function qpSave(){
   const c=contacts.find(x=>x.id===qpId);if(!c)return;
-  c.contact=qpStatusVal;save();renderAll();toast('Contact updated');closeQP();
+  c.contact=qpStatusVal;c.updatedAt=Date.now();save();renderAll();toast('Contact updated');closeQP();
 }
 function qpOpenFull(){const id=qpId;closeQP();editContact(id);}
 
