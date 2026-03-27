@@ -3,12 +3,13 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>GUD Community — Management Portal</title>
+<title>GUD Community Management — Dashboard</title>
+<link rel="icon" type="image/jpeg" href="logo-icon.jpg"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
-  --primary:#3CB95C;--primary-dark:#2EA04A;--primary-light:#EAF7EF;--primary-text:#1E6B37;
+  --primary:#00B050;--primary-dark:#009444;--primary-light:#E6F7ED;--primary-text:#006B30;
   --amber:#D97706;--amber-bg:#FEF3C7;--red:#DC2626;--red-bg:#FEE2E2;
   --blue:#2563EB;--blue-bg:#EFF6FF;
   --sidebar:#1B2A3B;--bg:#F2F4F7;--card:#fff;--border:#E2E7EC;
@@ -17,17 +18,30 @@
 }
 body{font-family:"DM Sans",sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;}
 .sidebar{width:var(--sidebar-w);min-width:var(--sidebar-w);background:var(--sidebar);color:#fff;padding:0;display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;}
-.logo{padding:1.75rem 1.5rem 1.25rem;border-bottom:1px solid rgba(255,255,255,.07);}
-.logo .name{font-family:"DM Serif Display",serif;font-size:22px;line-height:1.2;color:#fff;}
-.logo .sub{font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.12em;margin-top:5px;font-weight:600;text-transform:uppercase;}
+.logo{padding:1.5rem 1.25rem 1.25rem;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:12px;}
+.logo img{width:42px;height:42px;object-fit:contain;filter:brightness(0) invert(1) sepia(1) saturate(5) hue-rotate(85deg);}
+.logo-text{display:flex;flex-direction:column;}
+.logo .name{font-family:"DM Serif Display",serif;font-size:18px;line-height:1.15;color:#fff;letter-spacing:-.02em;}
+.logo .sub{font-size:9px;color:rgba(255,255,255,.45);letter-spacing:.08em;margin-top:3px;font-weight:600;text-transform:uppercase;}
 .nav-section{padding:1rem .75rem;flex:1;}
 .nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;cursor:pointer;font-size:13.5px;color:rgba(255,255,255,.55);font-weight:500;transition:background .15s,color .15s;margin-bottom:2px;}
 .nav-item:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.9);}
-.nav-item.active{background:rgba(60,185,92,.14);color:#4FCB6E;font-weight:600;}
+.nav-item.active{background:rgba(0,176,80,.18);color:#4DD67B;font-weight:600;}
 .nav-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.2);flex-shrink:0;transition:background .15s;}
-.nav-item.active .nav-dot{background:#3CB95C;}
+.nav-item.active .nav-dot{background:#00B050;}
 .sidebar-footer{padding:1rem 1.5rem;border-top:1px solid rgba(255,255,255,.07);font-size:11px;color:rgba(255,255,255,.25);}
-.main{margin-left:var(--sidebar-w);flex:1;padding:2rem 2.5rem;min-height:100vh;}
+.main{margin-left:var(--sidebar-w);flex:1;padding:0;min-height:100vh;display:flex;flex-direction:column;}
+.main-header{background:#fff;border-bottom:1px solid var(--border);padding:12px 2.5rem;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+.main-header::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--primary),var(--primary-dark));}
+.main-header-logo{display:flex;align-items:center;gap:10px;}
+.main-header-logo img{height:28px;}
+.main-header-logo span{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;}
+.main-header-user{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text);}
+.main-header-user .avatar{width:32px;height:32px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;}
+.main-content{flex:1;padding:2rem 2.5rem;}
+.main-footer{padding:1.5rem 2.5rem;border-top:1px solid var(--border);background:#fff;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--muted);}
+.main-footer-brand{display:flex;align-items:center;gap:8px;}
+.main-footer-brand img{height:16px;opacity:.4;}
 .page{display:none;}
 .page.active{display:block;}
 .top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.75rem;flex-wrap:wrap;gap:10px;}
@@ -86,14 +100,18 @@ tr:hover td{background:#F7FAF8;}
 .pagination button:disabled{opacity:.4;cursor:default;}
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center;}
 .modal-bg.open{display:flex;}
-.modal{background:#fff;border-radius:12px;padding:2rem;width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.15);}
-.modal h2{font-family:"DM Serif Display",serif;font-size:20px;font-weight:400;margin-bottom:1.5rem;}
+.modal{background:#fff;border-radius:12px;padding:0;width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.15);}
+.modal-head{background:linear-gradient(135deg,var(--sidebar) 0%,#243447 100%);padding:1.25rem 2rem;border-radius:12px 12px 0 0;display:flex;align-items:center;gap:12px;}
+.modal-head img{height:24px;filter:brightness(0) invert(1);}
+.modal h2{font-family:"DM Serif Display",serif;font-size:18px;font-weight:400;color:#fff;margin:0;}
+.modal-body{padding:1.5rem 2rem;}
 .field{margin-bottom:12px;}
 .field label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px;letter-spacing:.05em;text-transform:uppercase;}
 .field input,.field select,.field textarea{width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:#fff;color:var(--text);font-family:"DM Sans",sans-serif;outline:none;}
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(60,185,92,.1);}
 .field textarea{resize:vertical;min-height:60px;}
 .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);}
+.modal-body .modal-actions{margin-top:1.25rem;}
 .section-title{font-size:11px;font-weight:700;color:var(--muted);margin-bottom:1rem;text-transform:uppercase;letter-spacing:.08em;}
 .board-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.25rem 1.5rem;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;box-shadow:var(--shadow);}
 .review-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.25rem 1.5rem;margin-bottom:8px;box-shadow:var(--shadow);}
@@ -131,8 +149,12 @@ tr.int-timeus td{background:#e8eaf6;}tr.int-timeus:hover td{background:#c5cae9;}
 .name-link:hover{color:var(--primary-dark);text-decoration:underline;}
 .qp-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;justify-content:flex-end;}
 .qp-bg.open{display:flex;}
-.qp-panel{background:#fff;width:440px;height:100%;overflow-y:auto;padding:2rem;box-shadow:-8px 0 40px rgba(0,0,0,.12);display:flex;flex-direction:column;gap:16px;}
-.qp-panel h2{font-family:"DM Serif Display",serif;font-size:20px;font-weight:400;}
+.qp-panel{background:#fff;width:440px;height:100%;overflow-y:auto;padding:0;box-shadow:-8px 0 40px rgba(0,0,0,.12);display:flex;flex-direction:column;}
+.qp-head{background:linear-gradient(135deg,var(--sidebar) 0%,#243447 100%);padding:1.25rem 1.5rem;display:flex;justify-content:space-between;align-items:center;}
+.qp-head-left{display:flex;align-items:center;gap:10px;}
+.qp-head img{height:22px;filter:brightness(0) invert(1);}
+.qp-panel h2{font-family:"DM Serif Display",serif;font-size:18px;font-weight:400;color:#fff;margin:0;}
+.qp-body{padding:1.5rem;display:flex;flex-direction:column;gap:16px;flex:1;overflow-y:auto;}
 .qp-meta{font-size:13px;color:var(--muted);line-height:1.9;background:var(--bg);border-radius:8px;padding:12px 14px;}
 .qp-meta strong{color:var(--text);}
 .note-entry{background:var(--bg);border-radius:6px;padding:10px 12px;font-size:12.5px;line-height:1.6;margin-bottom:6px;}
@@ -147,8 +169,11 @@ tr.int-timeus td{background:#e8eaf6;}tr.int-timeus:hover td{background:#c5cae9;}
 
 <div class="sidebar">
   <div class="logo">
-    <div class="name">GUD<br>Community</div>
-    <div class="sub">Management Portal</div>
+    <img src="logo-icon.jpg" alt="GUD"/>
+    <div class="logo-text">
+      <div class="name">GUD Community</div>
+      <div class="sub">Management Portal</div>
+    </div>
   </div>
   <div class="nav-section">
     <div class="nav-item active" onclick="nav('dashboard',this)"><span class="nav-dot"></span> Dashboard</div>
@@ -156,10 +181,29 @@ tr.int-timeus td{background:#e8eaf6;}tr.int-timeus:hover td{background:#c5cae9;}
     <div class="nav-item" onclick="nav('board',this)"><span class="nav-dot"></span> Homeowners</div>
     <div class="nav-item" onclick="nav('reviews',this)"><span class="nav-dot"></span> Google Reviews</div>
   </div>
-  <div class="sidebar-footer">GUD Community · Arizona</div>
+  <div class="sidebar-footer">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+      <img src="logo-icon.jpg" alt="" style="width:16px;height:16px;opacity:.5;filter:brightness(0) invert(1);">
+      <span style="color:rgba(255,255,255,.4);font-weight:600;">GUD Community</span>
+    </div>
+    <div>Arizona · 2026</div>
+  </div>
 </div>
 
 <div class="main">
+
+  <div class="main-header">
+    <div class="main-header-logo">
+      <img src="logo-full.png" alt="GUD Community Management"/>
+      <span>Internal Dashboard</span>
+    </div>
+    <div class="main-header-user">
+      <span style="color:var(--muted);">Welcome back</span>
+      <div class="avatar">A</div>
+    </div>
+  </div>
+
+  <div class="main-content">
 
   <!-- DASHBOARD -->
   <div class="page active" id="page-dashboard">
@@ -351,72 +395,101 @@ tr.int-timeus td{background:#e8eaf6;}tr.int-timeus:hover td{background:#c5cae9;}
     <div id="review-list"></div>
   </div>
 
+  </div><!-- /main-content -->
+
+  <div class="main-footer">
+    <div class="main-footer-brand">
+      <img src="logo-icon.jpg" alt=""/>
+      <span>Powered by <strong style="color:var(--text);">GUD Community Management</strong></span>
+    </div>
+    <span>Arizona · Dashboard v1.0</span>
+  </div>
+
 </div>
 
 <!-- MODALS -->
 <div class="modal-bg" id="modal-add-contact">
   <div class="modal">
-    <h2 id="contact-modal-title">Add Contact</h2>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-      <div class="field" style="grid-column:1/-1"><label>Full Name</label><input id="c-name"/></div>
-      <div class="field" style="grid-column:1/-1"><label>Association</label><input id="c-assoc"/></div>
-      <div class="field"><label>Title</label><input id="c-title"/></div>
-      <div class="field"><label>Phone</label><input id="c-phone"/></div>
-      <div class="field" style="grid-column:1/-1"><label>Email</label><input id="c-email"/></div>
-      <div class="field"><label>Intern</label><input id="c-intern"/></div>
-      <div class="field"><label>Survey?</label><input id="c-survey" placeholder="Yes / No"/></div>
-      <div class="field"><label>Review?</label><input id="c-review" placeholder="Link sent / 5 star..."/></div>
-      <div class="field"><label>Follow-Up Call</label><input id="c-followup"/></div>
-      <div class="field"><label>Duration</label><input id="c-duration" placeholder="e.g. 5 min"/></div>
-      <div class="field" style="grid-column:1/-1"><label>Contact Notes</label><textarea id="c-contact"></textarea></div>
+    <div class="modal-head">
+      <img src="logo-icon.jpg" alt=""/>
+      <h2 id="contact-modal-title">Add Contact</h2>
     </div>
-    <div class="modal-actions">
-      <button class="btn btn-outline" onclick="closeModal('add-contact')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveContact()">Save</button>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="field" style="grid-column:1/-1"><label>Full Name</label><input id="c-name"/></div>
+        <div class="field" style="grid-column:1/-1"><label>Association</label><input id="c-assoc"/></div>
+        <div class="field"><label>Title</label><input id="c-title"/></div>
+        <div class="field"><label>Phone</label><input id="c-phone"/></div>
+        <div class="field" style="grid-column:1/-1"><label>Email</label><input id="c-email"/></div>
+        <div class="field"><label>Intern</label><input id="c-intern"/></div>
+        <div class="field"><label>Survey?</label><input id="c-survey" placeholder="Yes / No"/></div>
+        <div class="field"><label>Review?</label><input id="c-review" placeholder="Link sent / 5 star..."/></div>
+        <div class="field"><label>Follow-Up Call</label><input id="c-followup"/></div>
+        <div class="field"><label>Duration</label><input id="c-duration" placeholder="e.g. 5 min"/></div>
+        <div class="field" style="grid-column:1/-1"><label>Contact Notes</label><textarea id="c-contact"></textarea></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeModal('add-contact')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveContact()">Save</button>
+      </div>
     </div>
   </div>
 </div>
 
 <div class="modal-bg" id="modal-add-board">
   <div class="modal">
-    <h2>Add Board Member</h2>
-    <div class="field"><label>Full Name</label><input id="b-name"/></div>
-    <div class="field"><label>Role</label><input id="b-role" placeholder="President, Treasurer..."/></div>
-    <div class="field"><label>Email</label><input id="b-email"/></div>
-    <div class="field"><label>Phone</label><input id="b-phone"/></div>
-    <div class="modal-actions">
-      <button class="btn btn-outline" onclick="closeModal('add-board')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveBoard()">Save</button>
+    <div class="modal-head">
+      <img src="logo-icon.jpg" alt=""/>
+      <h2>Add Board Member</h2>
+    </div>
+    <div class="modal-body">
+      <div class="field"><label>Full Name</label><input id="b-name"/></div>
+      <div class="field"><label>Role</label><input id="b-role" placeholder="President, Treasurer..."/></div>
+      <div class="field"><label>Email</label><input id="b-email"/></div>
+      <div class="field"><label>Phone</label><input id="b-phone"/></div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeModal('add-board')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveBoard()">Save</button>
+      </div>
     </div>
   </div>
 </div>
 
 <div class="modal-bg" id="modal-add-review">
   <div class="modal">
-    <h2>Add Google Review</h2>
-    <div class="field"><label>Reviewer Name</label><input id="rv-name"/></div>
-    <div class="field"><label>Rating</label>
-      <select id="rv-stars">
-        <option value="5">5 stars</option><option value="4">4 stars</option>
-        <option value="3">3 stars</option><option value="2">2 stars</option><option value="1">1 star</option>
-      </select>
+    <div class="modal-head">
+      <img src="logo-icon.jpg" alt=""/>
+      <h2>Add Google Review</h2>
     </div>
-    <div class="field"><label>Region</label><select id="rv-region"><option value="Greater Phoenix">Greater Phoenix</option><option value="Southern Arizona">Southern Arizona</option></select></div>
-    <div class="field"><label>Date</label><input id="rv-date" type="date"/></div>
-    <div class="field"><label>Review Text</label><textarea id="rv-text"></textarea></div>
-    <div class="modal-actions">
-      <button class="btn btn-outline" onclick="closeModal('add-review')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveReview()">Save</button>
+    <div class="modal-body">
+      <div class="field"><label>Reviewer Name</label><input id="rv-name"/></div>
+      <div class="field"><label>Rating</label>
+        <select id="rv-stars">
+          <option value="5">5 stars</option><option value="4">4 stars</option>
+          <option value="3">3 stars</option><option value="2">2 stars</option><option value="1">1 star</option>
+        </select>
+      </div>
+      <div class="field"><label>Region</label><select id="rv-region"><option value="Greater Phoenix">Greater Phoenix</option><option value="Southern Arizona">Southern Arizona</option></select></div>
+      <div class="field"><label>Date</label><input id="rv-date" type="date"/></div>
+      <div class="field"><label>Review Text</label><textarea id="rv-text"></textarea></div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeModal('add-review')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveReview()">Save</button>
+      </div>
     </div>
   </div>
 </div>
 
 <div class="qp-bg" id="qp-bg" onclick="if(event.target===this)closeQP()">
   <div class="qp-panel">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <h2 id="qp-name">Contact</h2>
-      <button class="btn btn-outline btn-sm" onclick="closeQP()">✕ Close</button>
+    <div class="qp-head">
+      <div class="qp-head-left">
+        <img src="logo-icon.jpg" alt=""/>
+        <h2 id="qp-name">Contact</h2>
+      </div>
+      <button class="btn btn-outline btn-sm" style="background:transparent;border-color:rgba(255,255,255,.3);color:#fff;" onclick="closeQP()">✕ Close</button>
     </div>
+    <div class="qp-body">
     <div class="qp-meta" id="qp-meta"></div>
     <div>
       <div style="font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px;">Outreach Status</div>
@@ -440,6 +513,7 @@ tr.int-timeus td{background:#e8eaf6;}tr.int-timeus:hover td{background:#c5cae9;}
       <button class="btn btn-primary" style="flex:1;" onclick="qpSave()">Save Changes</button>
       <button class="btn btn-outline" onclick="qpOpenFull()">Full Edit</button>
     </div>
+    </div><!-- /qp-body -->
   </div>
 </div>
 <div class="toast" id="toast"></div>
