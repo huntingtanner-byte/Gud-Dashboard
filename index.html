@@ -362,7 +362,7 @@ tr.int-timeus td{background:#e8eaf6;}tr.int-timeus:hover td{background:#c5cae9;}
       <h1>Board Contacts</h1>
       <div style="display:flex;gap:8px;">
         <button class="btn btn-outline" onclick="exportCSV()">Export CSV</button>
-        <button class="btn btn-primary" onclick="openModal('add-contact')">+ Add Contact</button>
+        <button class="btn btn-primary" onclick="addNewContact()">+ Add Contact</button>
       </div>
     </div>
     <div class="controls">
@@ -486,9 +486,12 @@ tr.int-timeus td{background:#e8eaf6;}tr.int-timeus:hover td{background:#c5cae9;}
         <div class="field"><label>Duration</label><input id="c-duration" placeholder="e.g. 5 min"/></div>
         <div class="field" style="grid-column:1/-1"><label>Contact Notes (Status)</label><textarea id="c-contact"></textarea></div>
       </div>
-      <div class="modal-actions">
-        <button class="btn btn-outline" onclick="closeModal('add-contact')">Cancel</button>
-        <button class="btn btn-primary" onclick="saveContact()">Save</button>
+      <div class="modal-actions" style="justify-content:space-between;">
+        <button class="btn btn-outline btn-danger" id="delete-contact-btn" onclick="deleteContact()" style="display:none;">Delete</button>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-outline" onclick="closeModal('add-contact')">Cancel</button>
+          <button class="btn btn-primary" onclick="saveContact()">Save</button>
+        </div>
       </div>
     </div>
   </div>
@@ -633,6 +636,23 @@ function nav(page, el) {
 
 function openModal(id) { document.getElementById('modal-'+id).classList.add('open'); }
 function closeModal(id) { document.getElementById('modal-'+id).classList.remove('open'); editingId=null; }
+function addNewContact() {
+  editingId=null;
+  document.getElementById('contact-modal-title').textContent='Add Contact';
+  document.getElementById('c-name').value='';
+  document.getElementById('c-assoc').value='';
+  document.getElementById('c-title').value='';
+  document.getElementById('c-phone').value='';
+  document.getElementById('c-email').value='';
+  document.getElementById('c-intern').value='';
+  document.getElementById('c-survey').value='';
+  document.getElementById('c-review').value='';
+  document.getElementById('c-followup').value='';
+  document.getElementById('c-duration').value='';
+  document.getElementById('c-contact').value='';
+  document.getElementById('delete-contact-btn').style.display='none';
+  openModal('add-contact');
+}
 document.querySelectorAll('.modal-bg').forEach(bg=>bg.addEventListener('click',e=>{if(e.target===bg)bg.classList.remove('open');}));
 
 function populateInternFilter() {
@@ -821,7 +841,16 @@ function editContact(id) {
   document.getElementById('c-followup').value=c.followup||'';
   document.getElementById('c-duration').value=c.duration||'';
   document.getElementById('c-contact').value=c.contact||'';
+  document.getElementById('delete-contact-btn').style.display='block';
   openModal('add-contact');
+}
+
+function deleteContact() {
+  if(!editingId) return;
+  if(!confirm('Are you sure you want to delete this contact?')) return;
+  contacts = contacts.filter(x=>x.id!==editingId);
+  toast('Contact deleted');
+  save();renderAll();closeModal('add-contact');
 }
 
 function saveContact() {
