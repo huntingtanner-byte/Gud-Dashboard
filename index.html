@@ -636,16 +636,27 @@ function renderDash() {
   document.getElementById('m-progress-bar').style.width = pct+'%';
   document.getElementById('m-unreached').textContent = unreached;
   document.getElementById('m-unreached-pct').textContent = total ? Math.round(unreached/total*100)+'% remaining' : 'Need first contact';
+  // Google Reviews stats (from Google Business Profile)
+  const googleReviewCount = 691;
+  const googleAvgRating = 3.9;
+
   document.getElementById('m-vm').textContent = vm;
   document.getElementById('m-followup').textContent = followup;
   document.getElementById('m-survey').textContent = survey;
-  document.getElementById('m-review').textContent = review;
+  document.getElementById('m-review').textContent = googleReviewCount;
 
-  const avg = reviews.length ? (reviews.reduce((a,r)=>a+parseInt(r.stars),0)/reviews.length).toFixed(1) : '—';
-  document.getElementById('m-rating').textContent = avg!=='—' ? avg+'★' : '—';
-  document.getElementById('m-rating-sub').textContent = reviews.length ? reviews.length+' reviews · Goal: 4.2+' : 'Goal: 4.2+';
-  document.getElementById('r-avg').textContent = avg!=='—' ? avg+'★' : '—';
-  document.getElementById('r-count').textContent = reviews.length ? reviews.length+' review'+(reviews.length>1?'s':'') : 'No reviews logged';
+  // Color logic: green >= 4.2, red <= 2.9, yellow otherwise
+  const ratingColor = googleAvgRating >= 4.2 ? 'green' : (googleAvgRating <= 2.9 ? 'red' : 'amber');
+  const ratingEl = document.getElementById('m-rating');
+  const ratingElReviews = document.getElementById('r-avg');
+
+  ratingEl.textContent = googleAvgRating + '★';
+  ratingEl.className = 'mval ' + ratingColor;
+  document.getElementById('m-rating-sub').textContent = googleReviewCount + ' reviews · Goal: 4.2+';
+
+  ratingElReviews.textContent = googleAvgRating + '★';
+  ratingElReviews.className = 'mval ' + ratingColor;
+  document.getElementById('r-count').textContent = googleReviewCount + ' reviews';
   document.getElementById('dash-date').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
 
   // Intern breakdown
