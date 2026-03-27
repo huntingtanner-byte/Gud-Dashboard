@@ -460,6 +460,7 @@ tr.int-timeus td{background:#e8eaf6;}tr.int-timeus:hover td{background:#c5cae9;}
   <div class="page" id="page-networking">
     <div class="top-bar">
       <h1>Networking Contacts</h1>
+      <button class="btn btn-primary" onclick="addNewNetworking()">+ Add Contact</button>
     </div>
     <p style="color:var(--muted);font-size:13px;margin-bottom:1rem;">Internal tracking for outreach to lenders, realtors, chamber of commerce members, and other networking contacts.</p>
     <div class="tcard">
@@ -471,6 +472,7 @@ tr.int-timeus td{background:#e8eaf6;}tr.int-timeus:hover td{background:#c5cae9;}
           <th>PHONE</th>
           <th>INTERN</th>
           <th>STATUS</th>
+          <th>ACTION</th>
         </tr></thead>
         <tbody id="networking-tbody"></tbody>
       </table></div>
@@ -481,8 +483,9 @@ tr.int-timeus td{background:#e8eaf6;}tr.int-timeus:hover td{background:#c5cae9;}
   <div class="page" id="page-lowreviews">
     <div class="top-bar">
       <h1>1 & 2 Star Reviews</h1>
+      <button class="btn btn-primary" onclick="addNewLowReview()">+ Add Review</button>
     </div>
-    <p style="color:var(--muted);font-size:13px;margin-bottom:1rem;">Internal tracking for low-star Google reviews requiring follow-up. Click a row to see contact info.</p>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:1rem;">Internal tracking for low-star Google reviews requiring follow-up.</p>
     <div class="metrics metrics-3" style="margin-bottom:1.5rem;">
       <div class="metric metric-accent-red">
         <div class="mlabel">Total Low Reviews</div>
@@ -508,6 +511,7 @@ tr.int-timeus td{background:#e8eaf6;}tr.int-timeus:hover td{background:#c5cae9;}
           <th>DATE PUBLISHED</th>
           <th>CONTACTED</th>
           <th>NOTES</th>
+          <th>ACTION</th>
         </tr></thead>
         <tbody id="lowreviews-tbody"></tbody>
       </table></div>
@@ -602,6 +606,59 @@ tr.int-timeus td{background:#e8eaf6;}tr.int-timeus:hover td{background:#c5cae9;}
   </div>
 </div>
 
+<div class="modal-bg" id="modal-add-networking">
+  <div class="modal">
+    <div class="modal-head">
+      <img src="logo-icon.jpg" alt=""/>
+      <h2 id="net-modal-title">Add Networking Contact</h2>
+    </div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="field" style="grid-column:1/-1"><label>Name</label><input id="net-name"/></div>
+        <div class="field"><label>Title/Role</label><input id="net-title" placeholder="Lender, Realtor, etc."/></div>
+        <div class="field"><label>Phone</label><input id="net-phone"/></div>
+        <div class="field" style="grid-column:1/-1"><label>Email</label><input id="net-email"/></div>
+        <div class="field"><label>Assigned Intern</label><input id="net-intern"/></div>
+        <div class="field"><label>Status</label><input id="net-status" placeholder="VM, Contacted, etc."/></div>
+      </div>
+      <div class="modal-actions" style="justify-content:space-between;">
+        <button class="btn btn-outline btn-danger" id="delete-net-btn" onclick="deleteNetworking()" style="display:none;">Delete</button>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-outline" onclick="closeModal('add-networking')">Cancel</button>
+          <button class="btn btn-primary" onclick="saveNetworking()">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-add-lowreview">
+  <div class="modal">
+    <div class="modal-head">
+      <img src="logo-icon.jpg" alt=""/>
+      <h2 id="low-modal-title">Add Low Review</h2>
+    </div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="field" style="grid-column:1/-1"><label>Reviewer Name</label><input id="low-name"/></div>
+        <div class="field"><label>Phone</label><input id="low-phone"/></div>
+        <div class="field"><label>Email</label><input id="low-email"/></div>
+        <div class="field"><label>Community</label><input id="low-community"/></div>
+        <div class="field"><label>Date Published</label><input id="low-date" placeholder="e.g. 2 weeks ago"/></div>
+        <div class="field"><label>Contacted</label><input id="low-contacted" placeholder="Yes / No"/></div>
+        <div class="field" style="grid-column:1/-1"><label>Notes</label><textarea id="low-notes" placeholder="Action items, report?, need last name, etc."></textarea></div>
+      </div>
+      <div class="modal-actions" style="justify-content:space-between;">
+        <button class="btn btn-outline btn-danger" id="delete-low-btn" onclick="deleteLowReview()" style="display:none;">Delete</button>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-outline" onclick="closeModal('add-lowreview')">Cancel</button>
+          <button class="btn btn-primary" onclick="saveLowReview()">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="qp-bg" id="qp-bg" onclick="if(event.target===this)closeQP()">
   <div class="qp-panel">
     <div class="qp-head">
@@ -663,12 +720,13 @@ const REVIEW_DATA = [
   {name:'Brandi R.',stars:5,date:'',region:'Southern Arizona',text:"I've had a great experience working with the team here. They are professional, responsive, and always go above and beyond to provide support. You can tell they really care about their clients and communities."},
   {name:'Laura G.',stars:5,date:'',region:'Southern Arizona',text:'John Bouchie was quick to update our account and provide the info necessary for our increase. Your quick response times help move our day along fast and we appreciate that.'}
 ];
-let contacts = [], gudBoard = [], reviews = [], editingId = null;
+let contacts = [], gudBoard = [], reviews = [], networking = [], lowReviews = [], editingId = null;
 let currentPage = 1, pageSize = 50, sortField = null, sortDir = 1;
 let filtered = [];
+let editingNetworkingId = null, editingLowReviewId = null;
 
 // Networking contacts data
-const NETWORKING_DATA = [
+const NETWORKING_DEFAULT = [
   {name:"Ralph Saile",title:"Lender",email:"ralph.saile@nafinc.com",phone:"630-862-0035",intern:"Timeus",status:"Review"},
   {name:"Terrie Gardner",title:"Chamber of Commerce",email:"tgardner@mesachamber.org",phone:"480-969-1307",intern:"Sam",status:"VM, left a message with secretary"},
   {name:"Rosi Khazoom",title:"Sales Rep (Law Firm)",email:"rosi@breyerlaw.com",phone:"602-510-0371",intern:"TT",status:"VM, left a message with secretary"},
@@ -680,7 +738,7 @@ const NETWORKING_DATA = [
 ];
 
 // 1 & 2 Star Reviews data
-const LOW_REVIEWS_DATA = [
+const LOW_REVIEWS_DEFAULT = [
   {name:"Rachel L",phone:"",email:"",community:"",contacted:"",date:"2/6/2026",notes:""},
   {name:"Karen H",phone:"",email:"",community:"",contacted:"",date:"2/5/2026",notes:"communication complaints"},
   {name:"Kevin Pina",phone:"",email:"",community:"",contacted:"",date:"2/1/2026",notes:""},
@@ -746,6 +804,8 @@ function load() {
   try { const d = localStorage.getItem('gud-contacts2'); if(d) contacts = JSON.parse(d); else contacts = BOARD_DATA.map(r=>({...r})); } catch(e){ contacts = BOARD_DATA.map(r=>({...r})); }
   try { const d = localStorage.getItem('gud-gudboard'); if(d) gudBoard = JSON.parse(d); } catch(e){}
   try { const d = localStorage.getItem('gud-reviews2'); if(d) reviews = JSON.parse(d); else reviews = REVIEW_DATA.map(r=>({...r})); } catch(e){ reviews = REVIEW_DATA.map(r=>({...r})); }
+  try { const d = localStorage.getItem('gud-networking'); if(d) networking = JSON.parse(d); else networking = NETWORKING_DEFAULT.map((r,i)=>({...r,id:i+1})); } catch(e){ networking = NETWORKING_DEFAULT.map((r,i)=>({...r,id:i+1})); }
+  try { const d = localStorage.getItem('gud-lowreviews'); if(d) lowReviews = JSON.parse(d); else lowReviews = LOW_REVIEWS_DEFAULT.map((r,i)=>({...r,id:i+1})); } catch(e){ lowReviews = LOW_REVIEWS_DEFAULT.map((r,i)=>({...r,id:i+1})); }
   populateInternFilter();
   renderAll();
 }
@@ -754,6 +814,8 @@ function save() {
   localStorage.setItem('gud-contacts2', JSON.stringify(contacts));
   localStorage.setItem('gud-gudboard', JSON.stringify(gudBoard));
   localStorage.setItem('gud-reviews2', JSON.stringify(reviews));
+  localStorage.setItem('gud-networking', JSON.stringify(networking));
+  localStorage.setItem('gud-lowreviews', JSON.stringify(lowReviews));
 }
 
 function toast(msg) {
@@ -1047,19 +1109,72 @@ function deleteReview(i){if(!confirm('Remove?'))return;reviews.splice(i,1);save(
 function renderNetworking() {
   const tbody = document.getElementById('networking-tbody');
   if(!tbody) return;
-  tbody.innerHTML = NETWORKING_DATA.map(n => {
-    const statusClass = n.status.toLowerCase().includes('review') ? 'contacted' :
-                        n.status.toLowerCase().includes('vm') ? 'vm' :
-                        n.status.toLowerCase().includes("doesn't") ? 'none' : 'followup';
+  tbody.innerHTML = networking.map(n => {
+    const statusClass = (n.status||'').toLowerCase().includes('review') ? 'contacted' :
+                        (n.status||'').toLowerCase().includes('vm') ? 'vm' :
+                        (n.status||'').toLowerCase().includes("doesn't") ? 'none' : 'followup';
     return `<tr>
-      <td><div class="hw-name">${n.name}</div></td>
-      <td>${n.title}</td>
-      <td><a href="mailto:${n.email}" style="color:var(--primary-dark);">${n.email}</a></td>
-      <td>${n.phone}</td>
+      <td><div class="hw-name">${n.name||''}</div></td>
+      <td>${n.title||''}</td>
+      <td><a href="mailto:${n.email||''}" style="color:var(--primary-dark);">${n.email||''}</a></td>
+      <td>${n.phone||''}</td>
       <td>${internBadge(n.intern)}</td>
-      <td><span class="badge ${statusClass}">${n.status}</span></td>
+      <td><span class="badge ${statusClass}">${n.status||''}</span></td>
+      <td><button class="btn btn-outline btn-sm" onclick="editNetworking(${n.id})">Edit</button></td>
     </tr>`;
   }).join('');
+}
+
+function editNetworking(id) {
+  const n = networking.find(x=>x.id===id); if(!n) return;
+  editingNetworkingId = id;
+  document.getElementById('net-modal-title').textContent = 'Edit Networking Contact';
+  document.getElementById('net-name').value = n.name||'';
+  document.getElementById('net-title').value = n.title||'';
+  document.getElementById('net-email').value = n.email||'';
+  document.getElementById('net-phone').value = n.phone||'';
+  document.getElementById('net-intern').value = n.intern||'';
+  document.getElementById('net-status').value = n.status||'';
+  document.getElementById('delete-net-btn').style.display = 'block';
+  openModal('add-networking');
+}
+
+function addNewNetworking() {
+  editingNetworkingId = null;
+  document.getElementById('net-modal-title').textContent = 'Add Networking Contact';
+  ['net-name','net-title','net-email','net-phone','net-intern','net-status'].forEach(f=>document.getElementById(f).value='');
+  document.getElementById('delete-net-btn').style.display = 'none';
+  openModal('add-networking');
+}
+
+function saveNetworking() {
+  const name = document.getElementById('net-name').value.trim();
+  if(!name){alert('Name required');return;}
+  const data = {
+    name,
+    title: document.getElementById('net-title').value.trim(),
+    email: document.getElementById('net-email').value.trim(),
+    phone: document.getElementById('net-phone').value.trim(),
+    intern: document.getElementById('net-intern').value.trim(),
+    status: document.getElementById('net-status').value.trim()
+  };
+  if(editingNetworkingId) {
+    const i = networking.findIndex(x=>x.id===editingNetworkingId);
+    if(i>=0) networking[i] = {...networking[i],...data};
+    toast('Contact updated');
+  } else {
+    networking.push({id:Date.now(),...data});
+    toast('Contact added');
+  }
+  save();renderNetworking();closeModal('add-networking');
+}
+
+function deleteNetworking() {
+  if(!editingNetworkingId) return;
+  if(!confirm('Are you sure you want to delete this contact?')) return;
+  networking = networking.filter(x=>x.id!==editingNetworkingId);
+  toast('Contact deleted');
+  save();renderNetworking();closeModal('add-networking');
 }
 
 // Low Reviews render
@@ -1068,37 +1183,79 @@ function renderLowReviews() {
   if(!tbody) return;
 
   const actionKeywords = ['report?', 'report', 'last name', 'need last name', 'name', 'edit this review', 'resolve'];
-  const hasAction = (notes) => actionKeywords.some(k => notes.toLowerCase().includes(k));
-  const contacted = LOW_REVIEWS_DATA.filter(r => r.contacted && r.contacted.toLowerCase() === 'yes').length;
-  const actionCount = LOW_REVIEWS_DATA.filter(r => hasAction(r.notes)).length;
+  const hasAction = (notes) => notes && actionKeywords.some(k => notes.toLowerCase().includes(k));
+  const contacted = lowReviews.filter(r => r.contacted && r.contacted.toLowerCase() === 'yes').length;
+  const actionCount = lowReviews.filter(r => hasAction(r.notes)).length;
 
-  document.getElementById('low-total').textContent = LOW_REVIEWS_DATA.length;
+  document.getElementById('low-total').textContent = lowReviews.length;
   document.getElementById('low-action').textContent = actionCount;
   document.getElementById('low-contacted').textContent = contacted;
 
-  tbody.innerHTML = LOW_REVIEWS_DATA.map((r, i) => {
+  tbody.innerHTML = lowReviews.map(r => {
     const flagged = hasAction(r.notes);
-    const hasContact = r.phone || r.email;
-    return `<tr style="${flagged ? 'background:#FEF3C7;' : ''}" ${hasContact ? `class="clickable-row" onclick="showLowReviewContact(${i})" style="cursor:pointer;${flagged ? 'background:#FEF3C7;' : ''}"` : ''}>
-      <td>
-        <div class="hw-name">${r.name}</div>
-        ${hasContact ? '<div class="hw-sub" style="color:var(--primary);">Click for contact info</div>' : ''}
-      </td>
+    return `<tr style="${flagged ? 'background:#FEF3C7;' : ''}">
+      <td><div class="hw-name">${r.name||''}</div></td>
       <td>${r.community || '—'}</td>
-      <td>${r.date}</td>
+      <td>${r.date||''}</td>
       <td>${r.contacted ? '<span class="badge contacted">Yes</span>' : '<span class="badge none">—</span>'}</td>
       <td style="max-width:250px;white-space:normal;">${flagged ? '<span style="color:var(--amber);font-weight:600;">⚠</span> ' : ''}${r.notes || '—'}</td>
+      <td><button class="btn btn-outline btn-sm" onclick="editLowReview(${r.id})">Edit</button></td>
     </tr>`;
   }).join('');
 }
 
-function showLowReviewContact(i) {
-  const r = LOW_REVIEWS_DATA[i];
-  let info = `Contact Info for ${r.name}:\n`;
-  if(r.phone) info += `Phone: ${r.phone}\n`;
-  if(r.email) info += `Email: ${r.email}\n`;
-  if(r.community) info += `Community: ${r.community}`;
-  alert(info);
+function editLowReview(id) {
+  const r = lowReviews.find(x=>x.id===id); if(!r) return;
+  editingLowReviewId = id;
+  document.getElementById('low-modal-title').textContent = 'Edit Low Review';
+  document.getElementById('low-name').value = r.name||'';
+  document.getElementById('low-phone').value = r.phone||'';
+  document.getElementById('low-email').value = r.email||'';
+  document.getElementById('low-community').value = r.community||'';
+  document.getElementById('low-date').value = r.date||'';
+  document.getElementById('low-contacted').value = r.contacted||'';
+  document.getElementById('low-notes').value = r.notes||'';
+  document.getElementById('delete-low-btn').style.display = 'block';
+  openModal('add-lowreview');
+}
+
+function addNewLowReview() {
+  editingLowReviewId = null;
+  document.getElementById('low-modal-title').textContent = 'Add Low Review';
+  ['low-name','low-phone','low-email','low-community','low-date','low-contacted','low-notes'].forEach(f=>document.getElementById(f).value='');
+  document.getElementById('delete-low-btn').style.display = 'none';
+  openModal('add-lowreview');
+}
+
+function saveLowReview() {
+  const name = document.getElementById('low-name').value.trim();
+  if(!name){alert('Name required');return;}
+  const data = {
+    name,
+    phone: document.getElementById('low-phone').value.trim(),
+    email: document.getElementById('low-email').value.trim(),
+    community: document.getElementById('low-community').value.trim(),
+    date: document.getElementById('low-date').value.trim(),
+    contacted: document.getElementById('low-contacted').value.trim(),
+    notes: document.getElementById('low-notes').value.trim()
+  };
+  if(editingLowReviewId) {
+    const i = lowReviews.findIndex(x=>x.id===editingLowReviewId);
+    if(i>=0) lowReviews[i] = {...lowReviews[i],...data};
+    toast('Review updated');
+  } else {
+    lowReviews.unshift({id:Date.now(),...data});
+    toast('Review added');
+  }
+  save();renderLowReviews();closeModal('add-lowreview');
+}
+
+function deleteLowReview() {
+  if(!editingLowReviewId) return;
+  if(!confirm('Are you sure you want to delete this review?')) return;
+  lowReviews = lowReviews.filter(x=>x.id!==editingLowReviewId);
+  toast('Review deleted');
+  save();renderLowReviews();closeModal('add-lowreview');
 }
 
 let qpId=null,qpStatusVal='';
