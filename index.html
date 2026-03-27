@@ -163,6 +163,7 @@ tr.int-timeus td{background:#e8eaf6;}tr.int-timeus:hover td{background:#c5cae9;}
 .status-btn{padding:5px 14px;border-radius:4px;border:1px solid var(--border);background:#fff;font-size:12px;cursor:pointer;font-family:"DM Sans",sans-serif;font-weight:500;transition:all .15s;}
 .status-btn:hover{border-color:var(--primary);}
 .status-btn.active-s{border-color:var(--primary);background:var(--primary);color:#fff;}
+.clickable-row:hover td{background:var(--primary-light) !important;}
 
 /* Mobile menu toggle */
 .mobile-menu-btn{display:none;background:none;border:none;padding:8px;cursor:pointer;color:var(--text);}
@@ -233,6 +234,8 @@ tr.int-timeus td{background:#e8eaf6;}tr.int-timeus:hover td{background:#c5cae9;}
     <div class="nav-item" onclick="nav('contacts',this)"><span class="nav-dot"></span> Board Contacts <span class="count-badge" id="nav-count"></span></div>
     <div class="nav-item" onclick="nav('board',this)"><span class="nav-dot"></span> Homeowners</div>
     <div class="nav-item" onclick="nav('reviews',this)"><span class="nav-dot"></span> Google Reviews</div>
+    <div class="nav-item" onclick="nav('networking',this)"><span class="nav-dot"></span> Networking</div>
+    <div class="nav-item" onclick="nav('lowreviews',this)"><span class="nav-dot"></span> 1 & 2 Star Reviews</div>
   </div>
   <div class="sidebar-footer">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
@@ -453,6 +456,64 @@ tr.int-timeus td{background:#e8eaf6;}tr.int-timeus:hover td{background:#c5cae9;}
     <div id="review-list"></div>
   </div>
 
+  <!-- NETWORKING -->
+  <div class="page" id="page-networking">
+    <div class="top-bar">
+      <h1>Networking Contacts</h1>
+    </div>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:1rem;">Internal tracking for outreach to lenders, realtors, chamber of commerce members, and other networking contacts.</p>
+    <div class="tcard">
+      <div class="table-wrap"><table>
+        <thead><tr>
+          <th>NAME</th>
+          <th>TITLE/ROLE</th>
+          <th>EMAIL</th>
+          <th>PHONE</th>
+          <th>INTERN</th>
+          <th>STATUS</th>
+        </tr></thead>
+        <tbody id="networking-tbody"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- 1 & 2 STAR REVIEWS -->
+  <div class="page" id="page-lowreviews">
+    <div class="top-bar">
+      <h1>1 & 2 Star Reviews</h1>
+    </div>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:1rem;">Internal tracking for low-star Google reviews requiring follow-up. Click a row to see contact info.</p>
+    <div class="metrics metrics-3" style="margin-bottom:1.5rem;">
+      <div class="metric metric-accent-red">
+        <div class="mlabel">Total Low Reviews</div>
+        <div class="mval red" id="low-total">0</div>
+        <div class="msub">1 & 2 star reviews</div>
+      </div>
+      <div class="metric metric-accent-amber">
+        <div class="mlabel">Action Needed</div>
+        <div class="mval amber" id="low-action">0</div>
+        <div class="msub">Flagged for follow-up</div>
+      </div>
+      <div class="metric metric-accent-green">
+        <div class="mlabel">Contacted</div>
+        <div class="mval green" id="low-contacted">0</div>
+        <div class="msub">Reached out</div>
+      </div>
+    </div>
+    <div class="tcard">
+      <div class="table-wrap"><table>
+        <thead><tr>
+          <th>NAME</th>
+          <th>COMMUNITY</th>
+          <th>DATE PUBLISHED</th>
+          <th>CONTACTED</th>
+          <th>NOTES</th>
+        </tr></thead>
+        <tbody id="lowreviews-tbody"></tbody>
+      </table></div>
+    </div>
+  </div>
+
   </div><!-- /main-content -->
 
   <div class="main-footer">
@@ -606,6 +667,81 @@ let contacts = [], gudBoard = [], reviews = [], editingId = null;
 let currentPage = 1, pageSize = 50, sortField = null, sortDir = 1;
 let filtered = [];
 
+// Networking contacts data
+const NETWORKING_DATA = [
+  {name:"Ralph Saile",title:"Lender",email:"ralph.saile@nafinc.com",phone:"630-862-0035",intern:"Timeus",status:"Review"},
+  {name:"Terrie Gardner",title:"Chamber of Commerce",email:"tgardner@mesachamber.org",phone:"480-969-1307",intern:"Sam",status:"VM, left a message with secretary"},
+  {name:"Rosi Khazoom",title:"Sales Rep (Law Firm)",email:"rosi@breyerlaw.com",phone:"602-510-0371",intern:"TT",status:"VM, left a message with secretary"},
+  {name:"Trish Heiden",title:"Chamber of Commerce",email:"theiden@mesachamber.org",phone:"480-481-7784",intern:"TT",status:"VM"},
+  {name:"Susan Tychman",title:"Chamber of Commerce",email:"stychman@mesachamber.org",phone:"480-980-4552",intern:"TT",status:"Doesn't do them"},
+  {name:"Kevin DeRosa",title:"Janitorial Supply",email:"kevin@advancechampionsupply.com",phone:"602-568-4830",intern:"TT",status:"VM x2"},
+  {name:"Angela Tauscher",title:"Realtor",email:"angela@roverrealty.net",phone:"602-782-2444",intern:"Sam",status:"Doesn't want to unless GUD was their property manager"},
+  {name:"Erik Reichstein",title:"Financial Advisor",email:"erik.reichstein@edwardjones.com",phone:"480-830-0098",intern:"Sam",status:"Yes, says wouldn't be able to leave a great review, but will think about it."}
+];
+
+// 1 & 2 Star Reviews data
+const LOW_REVIEWS_DATA = [
+  {name:"Rachel L",phone:"",email:"",community:"",contacted:"",date:"2/6/2026",notes:""},
+  {name:"Karen H",phone:"",email:"",community:"",contacted:"",date:"2/5/2026",notes:"communication complaints"},
+  {name:"Kevin Pina",phone:"",email:"",community:"",contacted:"",date:"2/1/2026",notes:""},
+  {name:"Allison Loveall",phone:"423-444-2033",email:"Jloveall10@gmail.com",community:"",contacted:"",date:"2/1/2026",notes:""},
+  {name:"Stan Dorf",phone:"",email:"",community:"",contacted:"",date:"1/30/2026",notes:""},
+  {name:"Cynthia Gross",phone:"480-250-0945",email:"Vitamingir73@gmail.com",community:"La Jolla Cove",contacted:"",date:"a week ago",notes:""},
+  {name:"Nichole Faucher (2)",phone:"480-942-9396",email:"",community:"Casa Granada East",contacted:"",date:"a week ago",notes:""},
+  {name:"Tanya Jensen",phone:"",email:"",community:"",contacted:"",date:"a week ago",notes:""},
+  {name:"A Mountain Homes",phone:"",email:"",community:"",contacted:"",date:"a week ago",notes:""},
+  {name:"Tamara T",phone:"520-240-7851",email:"",community:"Muirfield Village",contacted:"",date:"2 weeks ago",notes:""},
+  {name:"Joseph Gomez",phone:"",email:"",community:"",contacted:"",date:"3 weeks ago",notes:""},
+  {name:"Outdoor Video",phone:"",email:"",community:"",contacted:"",date:"4 weeks ago",notes:""},
+  {name:"Jojo Caramello",phone:"",email:"",community:"",contacted:"",date:"a month ago",notes:""},
+  {name:"Janneth",phone:"",email:"",community:"",contacted:"",date:"2 months ago",notes:"last name ?"},
+  {name:"Mary",phone:"",email:"",community:"",contacted:"",date:"2 months ago",notes:"last name ?"},
+  {name:"Solonerizm",phone:"",email:"",community:"",contacted:"",date:"2 months ago",notes:"name"},
+  {name:"Matthew Long",phone:"",email:"",community:"",contacted:"",date:"2 months ago",notes:""},
+  {name:"Daniel B.",phone:"",email:"",community:"",contacted:"",date:"2 months ago",notes:""},
+  {name:"David Ferreira",phone:"",email:"",community:"",contacted:"",date:"2 months ago",notes:""},
+  {name:"Lourdes Pinzon",phone:"",email:"",community:"",contacted:"",date:"2 months ago",notes:""},
+  {name:"Chelsei Sweeney",phone:"",email:"",community:"",contacted:"",date:"3 months ago",notes:""},
+  {name:"Promcom Communications LLC",phone:"",email:"",community:"",contacted:"",date:"3 months ago",notes:"Get this one reported?"},
+  {name:"Kathy Chance",phone:"",email:"",community:"",contacted:"",date:"3 months ago (edited)",notes:""},
+  {name:"Alex Lopez",phone:"",email:"",community:"",contacted:"",date:"3 months ago",notes:""},
+  {name:"Joey Halvorsen",phone:"",email:"",community:"",contacted:"",date:"3 months ago",notes:""},
+  {name:"Alex Komro",phone:"",email:"",community:"",contacted:"",date:"3 months ago",notes:"if GUD can come back...resolve...then maybe I'll edit this review"},
+  {name:"Jill Free",phone:"",email:"",community:"",contacted:"",date:"4 months ago",notes:""},
+  {name:"Yayi Adventures",phone:"",email:"",community:"",contacted:"",date:"4 months ago",notes:""},
+  {name:"Jalane Quinonez",phone:"",email:"",community:"",contacted:"",date:"4 months ago",notes:""},
+  {name:"Lynton Limited",phone:"",email:"",community:"",contacted:"",date:"4 months ago",notes:"no comments, report?"},
+  {name:"Roberta Keith",phone:"",email:"",community:"",contacted:"",date:"4 months ago",notes:""},
+  {name:"Dima Gan",phone:"",email:"",community:"",contacted:"",date:"5 months ago",notes:""},
+  {name:"Blue Blue (2)",phone:"",email:"",community:"",contacted:"",date:"5 months ago",notes:"no comments, report?"},
+  {name:"Rob Gimbel",phone:"",email:"",community:"",contacted:"",date:"5 months ago",notes:"no comments, report?"},
+  {name:"Daniel V",phone:"",email:"",community:"",contacted:"",date:"5 months ago",notes:""},
+  {name:"Stephanie June",phone:"",email:"",community:"",contacted:"",date:"5 months ago",notes:""},
+  {name:"Donnel Patton",phone:"",email:"",community:"",contacted:"",date:"6 months ago",notes:""},
+  {name:"Janet Love",phone:"",email:"",community:"",contacted:"",date:"6 months ago",notes:""},
+  {name:"Mary Meshefski",phone:"",email:"",community:"",contacted:"",date:"7 months ago",notes:""},
+  {name:"Damali Armenta",phone:"",email:"",community:"",contacted:"",date:"7 months ago",notes:""},
+  {name:"Justin Kinsey",phone:"",email:"",community:"",contacted:"",date:"8 months ago",notes:"included the passing of his mom in review"},
+  {name:"Ashley",phone:"",email:"",community:"",contacted:"",date:"8 months ago",notes:"no comment, report?, need last name"},
+  {name:"Sergio Rubio",phone:"",email:"",community:"",contacted:"",date:"8 months ago",notes:"no comment, report?"},
+  {name:"Pat Wright",phone:"",email:"",community:"",contacted:"",date:"8 months ago",notes:""},
+  {name:"Kathy Bauman",phone:"",email:"",community:"",contacted:"",date:"9 months ago",notes:""},
+  {name:"Jo Schubert (2)",phone:"",email:"",community:"",contacted:"",date:"9 months ago",notes:""},
+  {name:"Peninah Gitonga",phone:"",email:"",community:"",contacted:"",date:"10 months ago",notes:""},
+  {name:"Kidane Falconer",phone:"",email:"",community:"",contacted:"",date:"10 months ago",notes:""},
+  {name:"Michael Matthes",phone:"",email:"",community:"",contacted:"",date:"10 months ago",notes:""},
+  {name:"Zane Keith",phone:"",email:"",community:"",contacted:"",date:"10 months ago",notes:""},
+  {name:"Ted Luther",phone:"",email:"",community:"",contacted:"",date:"10 months ago",notes:""},
+  {name:"v s",phone:"",email:"",community:"",contacted:"",date:"10 months ago",notes:"dont have their name"},
+  {name:"Callum Starrs",phone:"",email:"",community:"",contacted:"",date:"11 months ago",notes:""},
+  {name:"Anthony Sadolfo",phone:"",email:"",community:"",contacted:"",date:"11 months ago",notes:""},
+  {name:"Chase Davis",phone:"",email:"",community:"",contacted:"",date:"11 months ago",notes:""},
+  {name:"Sophia Hermosillo",phone:"",email:"",community:"",contacted:"",date:"11 months ago",notes:""},
+  {name:"Mandy Goracke",phone:"",email:"",community:"",contacted:"",date:"11 months ago",notes:""},
+  {name:"Nate Kettenring",phone:"(385) 329-3340 or (801) 870-5728",email:"",community:"Skyline Ranch",contacted:"",date:"a year ago",notes:""},
+  {name:"Dennis Naiberg",phone:"(480) 390-3235",email:"",community:"Grandview Estates",contacted:"",date:"a year ago",notes:""}
+];
+
 function load() {
   try { const d = localStorage.getItem('gud-contacts2'); if(d) contacts = JSON.parse(d); else contacts = BOARD_DATA.map(r=>({...r})); } catch(e){ contacts = BOARD_DATA.map(r=>({...r})); }
   try { const d = localStorage.getItem('gud-gudboard'); if(d) gudBoard = JSON.parse(d); } catch(e){}
@@ -680,7 +816,7 @@ function statusBadge(c) {
   return `<span class="badge ${cls}">${label}</span>`;
 }
 
-function renderAll() { renderDash(); renderContacts(); renderBoard(); renderReviews(); updateNavCount(); }
+function renderAll() { renderDash(); renderContacts(); renderBoard(); renderReviews(); renderNetworking(); renderLowReviews(); updateNavCount(); }
 
 function updateNavCount() {
   document.getElementById('nav-count').textContent = contacts.length;
@@ -906,6 +1042,64 @@ function saveReview() {
   toast('Review added');
 }
 function deleteReview(i){if(!confirm('Remove?'))return;reviews.splice(i,1);save();renderAll();}
+
+// Networking render
+function renderNetworking() {
+  const tbody = document.getElementById('networking-tbody');
+  if(!tbody) return;
+  tbody.innerHTML = NETWORKING_DATA.map(n => {
+    const statusClass = n.status.toLowerCase().includes('review') ? 'contacted' :
+                        n.status.toLowerCase().includes('vm') ? 'vm' :
+                        n.status.toLowerCase().includes("doesn't") ? 'none' : 'followup';
+    return `<tr>
+      <td><div class="hw-name">${n.name}</div></td>
+      <td>${n.title}</td>
+      <td><a href="mailto:${n.email}" style="color:var(--primary-dark);">${n.email}</a></td>
+      <td>${n.phone}</td>
+      <td>${internBadge(n.intern)}</td>
+      <td><span class="badge ${statusClass}">${n.status}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// Low Reviews render
+function renderLowReviews() {
+  const tbody = document.getElementById('lowreviews-tbody');
+  if(!tbody) return;
+
+  const actionKeywords = ['report?', 'report', 'last name', 'need last name', 'name', 'edit this review', 'resolve'];
+  const hasAction = (notes) => actionKeywords.some(k => notes.toLowerCase().includes(k));
+  const contacted = LOW_REVIEWS_DATA.filter(r => r.contacted && r.contacted.toLowerCase() === 'yes').length;
+  const actionCount = LOW_REVIEWS_DATA.filter(r => hasAction(r.notes)).length;
+
+  document.getElementById('low-total').textContent = LOW_REVIEWS_DATA.length;
+  document.getElementById('low-action').textContent = actionCount;
+  document.getElementById('low-contacted').textContent = contacted;
+
+  tbody.innerHTML = LOW_REVIEWS_DATA.map((r, i) => {
+    const flagged = hasAction(r.notes);
+    const hasContact = r.phone || r.email;
+    return `<tr style="${flagged ? 'background:#FEF3C7;' : ''}" ${hasContact ? `class="clickable-row" onclick="showLowReviewContact(${i})" style="cursor:pointer;${flagged ? 'background:#FEF3C7;' : ''}"` : ''}>
+      <td>
+        <div class="hw-name">${r.name}</div>
+        ${hasContact ? '<div class="hw-sub" style="color:var(--primary);">Click for contact info</div>' : ''}
+      </td>
+      <td>${r.community || '—'}</td>
+      <td>${r.date}</td>
+      <td>${r.contacted ? '<span class="badge contacted">Yes</span>' : '<span class="badge none">—</span>'}</td>
+      <td style="max-width:250px;white-space:normal;">${flagged ? '<span style="color:var(--amber);font-weight:600;">⚠</span> ' : ''}${r.notes || '—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function showLowReviewContact(i) {
+  const r = LOW_REVIEWS_DATA[i];
+  let info = `Contact Info for ${r.name}:\n`;
+  if(r.phone) info += `Phone: ${r.phone}\n`;
+  if(r.email) info += `Email: ${r.email}\n`;
+  if(r.community) info += `Community: ${r.community}`;
+  alert(info);
+}
 
 let qpId=null,qpStatusVal='';
 function openQP(id){
