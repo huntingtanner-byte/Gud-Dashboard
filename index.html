@@ -116,6 +116,16 @@ tr.int-timeus td{background:#e8eaf6;}tr.int-timeus:hover td{background:#c5cae9;}
 .ibadge-mia{background:#e8f5e9;color:#2e7d32;}.ibadge-sam{background:#e3f2fd;color:#1565c0;}
 .ibadge-timeus{background:#e8eaf6;color:#283593;}
 .intern-select{appearance:none;-webkit-appearance:none;}
+.dash-filter{padding:4px 10px;border-radius:4px;border:1px solid var(--border);background:#fff;font-size:11px;font-weight:600;cursor:pointer;font-family:"DM Sans",sans-serif;color:var(--muted);transition:all .15s;}
+.dash-filter:hover{border-color:var(--primary);color:var(--primary-dark);}
+.dash-filter.active-f{background:var(--primary);border-color:var(--primary);color:#fff;}
+.intern-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.intern-row:last-child{margin-bottom:0;}
+.intern-bar-wrap{flex:1;height:6px;background:var(--border);border-radius:99px;overflow:hidden;}
+.intern-bar{height:100%;border-radius:99px;transition:width .4s;}
+.intern-bar-kate{background:#c2185b;}.intern-bar-matt{background:#c62828;}
+.intern-bar-mia{background:#2e7d32;}.intern-bar-sam{background:#1565c0;}
+.intern-bar-timeus{background:#283593;}
 .intern-select:focus{outline:2px solid var(--primary);}
 .name-link{cursor:pointer;color:var(--text);}
 .name-link:hover{color:var(--primary-dark);text-decoration:underline;}
@@ -157,30 +167,35 @@ tr.int-timeus td{background:#e8eaf6;}tr.int-timeus:hover td{background:#c5cae9;}
       <h1>Dashboard</h1>
       <div style="font-size:13px;color:var(--muted)" id="dash-date"></div>
     </div>
-    <div class="metrics metrics-3" style="margin-bottom:1.25rem;">
-      <div class="metric metric-accent-gray" style="padding:1.75rem 2rem;">
+
+    <!-- Top metrics row -->
+    <div class="metrics metrics-4" style="margin-bottom:1.25rem;">
+      <div class="metric metric-accent-gray" style="padding:1.5rem 1.75rem;">
         <div class="mlabel">Total Contacts</div>
-        <div class="mval" id="m-total" style="font-size:42px;">0</div>
+        <div class="mval" id="m-total" style="font-size:38px;">0</div>
         <div class="msub">Board members in system</div>
       </div>
-      <div class="metric metric-accent-green" style="padding:1.75rem 2rem;">
+      <div class="metric metric-accent-green" style="padding:1.5rem 1.75rem;">
         <div class="mlabel">Contacted</div>
-        <div class="mval green" id="m-contacted" style="font-size:42px;">0</div>
+        <div class="mval green" id="m-contacted" style="font-size:38px;">0</div>
+        <div style="margin:8px 0 4px;height:5px;background:var(--border);border-radius:99px;overflow:hidden;"><div id="m-progress-bar" style="height:100%;background:var(--primary);border-radius:99px;width:0%;transition:width .4s;"></div></div>
         <div class="msub" id="m-contacted-pct">Reached successfully</div>
       </div>
-      <div class="metric metric-accent-blue" style="padding:1.75rem 2rem;">
-        <div class="mlabel">Reviews Left</div>
-        <div class="mval" style="font-size:42px;color:var(--blue)" id="m-review">0</div>
+      <div class="metric metric-accent-red" style="padding:1.5rem 1.75rem;">
+        <div class="mlabel">Still Unreached</div>
+        <div class="mval red" id="m-unreached" style="font-size:38px;">0</div>
+        <div class="msub" id="m-unreached-pct">Need first contact</div>
+      </div>
+      <div class="metric metric-accent-blue" style="padding:1.5rem 1.75rem;">
+        <div class="mlabel">Reviews Logged</div>
+        <div class="mval" style="font-size:38px;color:var(--blue)" id="m-review">0</div>
         <div class="msub">Google reviews submitted</div>
       </div>
     </div>
-    <div class="metrics metrics-4">
+
+    <!-- Secondary metrics row -->
+    <div class="metrics metrics-4" style="margin-bottom:1.75rem;">
       <div class="metric metric-accent-amber">
-        <div class="mlabel">Surveys Done</div>
-        <div class="mval amber" id="m-survey">0</div>
-        <div class="msub">Completed survey</div>
-      </div>
-      <div class="metric metric-accent-red">
         <div class="mlabel">VM / No Answer</div>
         <div class="mval red" id="m-vm">0</div>
         <div class="msub">Left voicemail</div>
@@ -190,11 +205,52 @@ tr.int-timeus td{background:#e8eaf6;}tr.int-timeus:hover td{background:#c5cae9;}
         <div class="mval amber" id="m-followup">0</div>
         <div class="msub">Needs a callback</div>
       </div>
+      <div class="metric metric-accent-green">
+        <div class="mlabel">Surveys Done</div>
+        <div class="mval green" id="m-survey">0</div>
+        <div class="msub">Completed survey</div>
+      </div>
       <div class="metric metric-accent-amber">
         <div class="mlabel">Google Rating</div>
         <div class="mval amber" id="m-rating">—</div>
         <div class="msub" id="m-rating-sub">Goal: 4.2+</div>
       </div>
+    </div>
+
+    <!-- Intern breakdown + Recent Activity side by side -->
+    <div style="display:grid;grid-template-columns:340px 1fr;gap:16px;align-items:start;">
+
+      <!-- Intern breakdown -->
+      <div class="tcard" style="padding:1.25rem 1.5rem;">
+        <div class="section-title" style="margin-bottom:1rem;">Intern Progress</div>
+        <div id="intern-breakdown"></div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="tcard">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:1rem 1.25rem .75rem;border-bottom:1px solid var(--border);">
+          <div class="section-title" style="margin-bottom:0;">Recent Activity</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;" id="dash-intern-filters">
+            <button class="dash-filter active-f" data-intern="" onclick="dashFilter(this)">All</button>
+            <button class="dash-filter" data-intern="Kate" onclick="dashFilter(this)">Kate</button>
+            <button class="dash-filter" data-intern="Matt" onclick="dashFilter(this)">Matt</button>
+            <button class="dash-filter" data-intern="Mia" onclick="dashFilter(this)">Mia</button>
+            <button class="dash-filter" data-intern="Sam" onclick="dashFilter(this)">Sam</button>
+            <button class="dash-filter" data-intern="Timeus" onclick="dashFilter(this)">Timeus</button>
+          </div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead><tr>
+            <th style="text-align:left;font-size:11px;color:var(--muted);letter-spacing:.06em;font-weight:700;padding:8px 14px;border-bottom:1px solid var(--border);background:#FAFBFC;text-transform:uppercase;">Name</th>
+            <th style="text-align:left;font-size:11px;color:var(--muted);letter-spacing:.06em;font-weight:700;padding:8px 14px;border-bottom:1px solid var(--border);background:#FAFBFC;text-transform:uppercase;">Association</th>
+            <th style="text-align:left;font-size:11px;color:var(--muted);letter-spacing:.06em;font-weight:700;padding:8px 14px;border-bottom:1px solid var(--border);background:#FAFBFC;text-transform:uppercase;">Intern</th>
+            <th style="text-align:left;font-size:11px;color:var(--muted);letter-spacing:.06em;font-weight:700;padding:8px 14px;border-bottom:1px solid var(--border);background:#FAFBFC;text-transform:uppercase;">Status</th>
+            <th style="text-align:left;font-size:11px;color:var(--muted);letter-spacing:.06em;font-weight:700;padding:8px 14px;border-bottom:1px solid var(--border);background:#FAFBFC;text-transform:uppercase;">Survey</th>
+          </tr></thead>
+          <tbody id="dash-tbody"></tbody>
+        </table>
+      </div>
+
     </div>
   </div>
 
@@ -456,6 +512,29 @@ function updateNavCount() {
   document.getElementById('nav-count').textContent = contacts.length;
 }
 
+let dashInternFilter = '';
+function dashFilter(btn) {
+  dashInternFilter = btn.getAttribute('data-intern');
+  document.querySelectorAll('.dash-filter').forEach(b=>b.classList.remove('active-f'));
+  btn.classList.add('active-f');
+  renderRecentActivity();
+}
+
+function renderRecentActivity() {
+  const pool = contacts.filter(c=>c.contact&&c.contact.trim());
+  const filtered = dashInternFilter ? pool.filter(c=>c.intern===dashInternFilter) : pool;
+  const recent = filtered.slice(0,15);
+  document.getElementById('dash-tbody').innerHTML = recent.length ? recent.map(c=>`
+    <tr class="${internClass(c.intern)}" style="cursor:pointer;" onclick="openQP(${c.id})">
+      <td><div class="hw-name">${c.name}</div><div class="hw-sub">${c.assoc}</div></td>
+      <td style="color:var(--muted);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.assoc}</td>
+      <td>${internBadge(c.intern)}</td>
+      <td>${statusBadge(c)}</td>
+      <td>${c.survey?`<span class="badge survey">${c.survey}</span>`:'—'}</td>
+    </tr>`).join('')
+  : `<tr><td colspan="5" class="empty">No contacts with activity yet.</td></tr>`;
+}
+
 function renderDash() {
   const total = contacts.length;
   const contacted = contacts.filter(c=>getStatus(c)==='contacted').length;
@@ -463,19 +542,45 @@ function renderDash() {
   const followup = contacts.filter(c=>getStatus(c)==='followup').length;
   const survey = contacts.filter(c=>c.survey&&c.survey.toLowerCase().includes('yes')).length;
   const review = contacts.filter(c=>c.review&&c.review.trim()&&c.review!=='-').length;
+  const unreached = contacts.filter(c=>!c.contact||!c.contact.trim()).length;
+  const pct = total ? Math.round(contacted/total*100) : 0;
+
   document.getElementById('m-total').textContent = total;
   document.getElementById('m-contacted').textContent = contacted;
-  document.getElementById('m-contacted-pct').textContent = total ? Math.round(contacted/total*100)+'% of contacts' : 'Reached successfully';
+  document.getElementById('m-contacted-pct').textContent = pct+'% of total';
+  document.getElementById('m-progress-bar').style.width = pct+'%';
+  document.getElementById('m-unreached').textContent = unreached;
+  document.getElementById('m-unreached-pct').textContent = total ? Math.round(unreached/total*100)+'% remaining' : 'Need first contact';
   document.getElementById('m-vm').textContent = vm;
   document.getElementById('m-followup').textContent = followup;
   document.getElementById('m-survey').textContent = survey;
   document.getElementById('m-review').textContent = review;
+
   const avg = reviews.length ? (reviews.reduce((a,r)=>a+parseInt(r.stars),0)/reviews.length).toFixed(1) : '—';
   document.getElementById('m-rating').textContent = avg!=='—' ? avg+'★' : '—';
   document.getElementById('m-rating-sub').textContent = reviews.length ? reviews.length+' reviews · Goal: 4.2+' : 'Goal: 4.2+';
   document.getElementById('r-avg').textContent = avg!=='—' ? avg+'★' : '—';
   document.getElementById('r-count').textContent = reviews.length ? reviews.length+' review'+(reviews.length>1?'s':'') : 'No reviews logged';
   document.getElementById('dash-date').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+
+  // Intern breakdown
+  const interns = ['Kate','Matt','Mia','Sam','Timeus'];
+  const breakdown = interns.map(name=>{
+    const group = contacts.filter(c=>c.intern===name);
+    const done = group.filter(c=>getStatus(c)==='contacted').length;
+    const pct = group.length ? Math.round(done/group.length*100) : 0;
+    return {name, total:group.length, done, pct};
+  });
+  const unassigned = contacts.filter(c=>!c.intern||!interns.includes(c.intern)).length;
+  document.getElementById('intern-breakdown').innerHTML = breakdown.map(b=>`
+    <div class="intern-row">
+      <div style="width:62px;font-size:12px;font-weight:600;color:var(--text);">${b.name}</div>
+      <div class="intern-bar-wrap"><div class="intern-bar intern-bar-${b.name.toLowerCase()}" style="width:${b.pct}%"></div></div>
+      <div style="font-size:12px;color:var(--muted);white-space:nowrap;min-width:72px;text-align:right;">${b.done}/${b.total} <span style="color:var(--primary-dark);font-weight:600;">${b.pct}%</span></div>
+    </div>`).join('')
+  + (unassigned ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:12px;color:var(--muted);">${unassigned} unassigned contacts</div>` : '');
+
+  renderRecentActivity();
 }
 
 function getFiltered() {
